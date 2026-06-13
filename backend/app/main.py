@@ -13,16 +13,16 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    from .routers import health as health_routers
+    from .routers import health, auth, dashboard, notifications, tools, ai
 
-    app.include_router(health_routers.router)
-
-    @app.get("/health")
-    async def root_health():
-        return {"status": "ok"}
+    app.include_router(health.router)
+    app.include_router(auth.router)
+    app.include_router(dashboard.router)
+    app.include_router(notifications.router)
+    app.include_router(tools.router)
+    app.include_router(ai.router)
 
     return app
 
 
 app = create_app()
-
