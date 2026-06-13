@@ -1,85 +1,78 @@
 from datetime import datetime
-
 from sqlalchemy import (
     Boolean,
+    Column,
     DateTime,
-    Float,
     Integer,
     JSON,
     String,
     Text,
+    ForeignKey,
 )
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
-from ..app.database import Base
+from .database import Base
 
 
 class Role(Base):
     __tablename__ = "roles"
-    id = Integer(primary_key=True)
-    name = String(255), nullable=False, unique=True
-    slug = String(255), nullable=False, unique=True
-    description = Text
-    permissions = JSON, nullable=False, default={}
-    is_system = Boolean, nullable=False, server_default="false"
-    created_at = DateTime, server_default=func.now()
-    updated_at = DateTime, server_default=func.now(), onupdate=func.now()
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), unique=True, nullable=False)
+    slug = Column(String(255), unique=True, nullable=False)
+    description = Column(Text)
+    permissions = Column(JSON, nullable=False, default={})
+    is_system = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class Customer(Base):
     __tablename__ = "customers"
-    id = Integer(primary_key=True)
-    name = String(255), nullable=False
-    slug = String(255), nullable=False, unique=True
-    contact_email = String(255)
-    contact_phone = String(255)
-    address = Text
-    tenant_id = String(255), nullable=False, server_default="default"
-    is_active = Boolean, nullable=False, server_default="true"
-    metadata = JSON, nullable=False, default={}
-    created_at = DateTime, server_default=func.now()
-    updated_at = DateTime, server_default=func.now(), onupdate=func.now()
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(255), unique=True, nullable=False)
+    contact_email = Column(String(255))
+    contact_phone = Column(String(255))
+    address = Column(Text)
+    tenant_id = Column(String(255), nullable=False, default="default")
+    is_active = Column(Boolean, nullable=False, default=True)
+    metadata = Column(JSON, nullable=False, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class Site(Base):
     __tablename__ = "sites"
-    id = Integer(primary_key=True)
-    customer_id = Integer, nullable=False
-    name = String(255), nullable=False
-    location = Text
-    timezone = String(64), nullable=False, server_default="UTC"
-    metadata = JSON, nullable=False, default={}
-    created_at = DateTime, server_default=func.now()
-    updated_at = DateTime, server_default=func.now(), onupdate=func.now()
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(255), nullable=False)
+    location = Column(Text)
+    timezone = Column(String(64), nullable=False, default="UTC")
+    metadata = Column(JSON, nullable=False, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class User(Base):
     __tablename__ = "users"
-    id = Integer(primary_key=True)
-    email = String(255), unique=True
-    username = String(255), unique=True
-    hashed_password = String(255)
-    full_name = String(255)
-    role_id = Integer, nullable=False
-    customer_id = Integer
-    site_id = Integer
-    is_active = Boolean, nullable=False, server_default="true"
-    is_locked = Boolean, nullable=False, server_default="false"
-    last_login_at = DateTime
-    metadata = JSON, nullable=False, default={}
-    created_at = DateTime, server_default=func.now()
-    updated_at = DateTime, server_default=func.now(), onupdate=func.now()
 
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True)
+    username = Column(String(255), unique=True, nullable=False)
+    hashed_password = Column(String(255))
+    full_name = Column(String(255))
+    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id", ondelete="SET NULL"))
+    site_id = Column(Integer, ForeignKey("sites.id", ondelete="SET NULL"))
+    is_active = Column(Boolean, nullable=False, default=True)
+    is_locked = Column(Boolean, nullable=False, default=False)
+    last_login_at = Column(DateTime(timezone=True))
+    metadata = Column(JSON, nullable=False, default={})
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-class AuditLog(Base):
-    __tablename__ = "audit_logs"
-    id = Integer, primary_key=True, autoincrement=True
-    actor_id = Integer
-    actor_email = String(255)
-    action = String(255), nullable=False
-    target_type = String(255)
-    target_id = Integer
-    payload = JSON, default={}
-    ip_address = String(64)
-    user_agent = Text
-    created_at = DateTime, server_default=func.now()
+    role = relationship("Role", lazy="joined")
