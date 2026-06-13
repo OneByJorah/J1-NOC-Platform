@@ -5,7 +5,7 @@ export default function SNMPTab() {
   const [devices, setDevices] = useState<any>(null);
 
   useEffect(() => {
-    get('/snmp/discover?subnet=10.0.0.0/24').then((data: any) => setDevices(data)).catch(() => {});
+    get('/snmp/discover?subnet=192.0.2.0/24').then((data: any) => setDevices(data)).catch(() => {});
   }, []);
 
   return (
