@@ -1,1 +1,0 @@
-Frontend placeholder for React/Vite application.
