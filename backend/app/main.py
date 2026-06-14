@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .config import get_settings
 from .database import engine, Base
@@ -40,8 +41,12 @@ def create_app() -> FastAPI:
 
     @app.post("/forcerepl", include_in_schema=False)
     async def forcerepl_root(request: Request):
-        from app.routers.static_data import force_repl
-        return await force_repl(request)
+        try:
+            body_bytes = await request.body()
+            body = json.loads(body_bytes.decode() if body_bytes else "{}")
+        except Exception as exc:
+            return JSONResponse({"Success": False, "Error": str(exc)}, status_code=200)
+        return JSONResponse({"Success": True, "Request": body})
 
     app.include_router(static_data.router, prefix="/api")
     app.include_router(health.router)

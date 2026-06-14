@@ -26,6 +26,7 @@ services:
     restart: unless-stopped
     volumes:
       - backend_logs:/logs
+      - /srv/jnop/data:/srv/jnop/data:ro
     networks:
       - internal
     environment:
