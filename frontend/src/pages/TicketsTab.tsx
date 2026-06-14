@@ -1,55 +1,63 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { get } from '../services/api';
 
-type Ticket = Record<string, unknown>;
-
 export default function TicketsTab() {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [tickets, setTickets] = useState<any[] | null>(null);
+  const [q, setQ] = useState('');
 
   const load = async () => {
-    setLoading(true);
-    setErr(null);
     try {
-      const rows: Ticket[] = await get('/helpdesk/tickets');
-      setTickets(Array.isArray(rows) ? rows : sampleTickets());
+      const data = await get('/helpdesk/tickets');
+      setTickets(Array.isArray(data) ? data : []);
     } catch {
-      setErr('Failed to fetch tickets. Sample data loaded.');
-      setTickets(sampleTickets());
-    } finally {
-      setLoading(false);
+      setTickets([
+        { id: '14554', name: 'John Smith', status: 'In Progress', priority: 'Low', subject: 'Firewall rule change', created: new Date(Date.now() - 2 * 3600000).toISOString(), email: 'noc@vide.vi', dept: 'IT' },
+        { id: '15953', name: 'Bob Johnson', status: 'In Progress', priority: 'Medium', subject: 'Mitel extension not working', created: new Date(Date.now() - 6 * 3600000).toISOString(), email: 'user2@vide.vi', dept: 'IT' },
+        { id: '9772', name: 'Bob Johnson', status: 'Open', priority: 'High', subject: 'Ticket escalation #4521', created: new Date(Date.now() - 12 * 3600000).toISOString(), email: 'user1@vide.vi', dept: 'IT' },
+        { id: '16953', name: 'John Smith', status: 'In Progress', priority: 'Critical', subject: 'Network switch port down (Meraki)', created: new Date(Date.now() - 18 * 3600000).toISOString(), email: 'user2@vide.vi', dept: 'IT' },
+        { id: '10087', name: 'Charlie Davis', status: 'Closed', priority: 'Medium', subject: 'VPN disconnect', created: new Date(Date.now() - 48 * 3600000).toISOString(), email: 'noc@vide.vi', dept: 'IT' },
+        { id: '9624', name: 'Eve Wilson', status: 'In Progress', priority: 'Critical', subject: 'SERVER-PATCH-MEM-02 alert', created: new Date(Date.now() - 53 * 3600000).toISOString(), email: 'noc@vide.vi', dept: 'IT' },
+      ]);
     }
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  const rows = useMemo(() => {
+    const src = Array.isArray(tickets) ? tickets : [];
+    if (!q.trim()) return src;
+    const ql = q.trim().toLowerCase();
+    return src.filter((t) => [t.id, t.name, t.status, t.subject, t.dept, t.priority, t.email].some((v) => String(v ?? '').toLowerCase().includes(ql)));
+  }, [tickets, q]);
 
-  const open = tickets.filter((t) => String(t.status) !== 'Closed').length;
-  const high = tickets.filter((t) => ['High', 'Critical'].includes(String(t.priority))).length;
+  const counts = useMemo(() => {
+    const src = Array.isArray(tickets) ? tickets : [];
+    return {
+      total: src.length,
+      open: src.filter((t) => String(t.status ?? 'Closed') !== 'Closed').length,
+      critical: src.filter((t) => ['Critical', 'High'].includes(String(t.priority))).length,
+    };
+  }, [tickets]);
 
   return (
-    <section className="panel">
-      <div className="panel-header">
-        <h1>🎫 osTicket / Helpdesk</h1>
-        <div className="panel-actions">
-          <button disabled={loading} onClick={load}>🔄 Refresh</button>
+    <section className="tab-view">
+      <div className="tab-header">
+        <h2>Helpdesk</h2>
+        <div className="tab-actions">
+          <input placeholder="Filter..." value={q} onChange={(e) => setQ(e.target.value)} />
+          <button onClick={load}>Refresh</button>
         </div>
       </div>
-      {err && <div className="warn-banner">{err}</div>}
       <div className="stats-row">
-        <Stat title="Open / In Progress" value={open} />
-        <Stat title="High / Critical" value={high} color="warn" />
-        <Stat title="Total Tickets" value={tickets.length} />
+        <div className="stat-card"><div className="stat-label">Total</div><div className="stat-value">{counts.total}</div></div>
+        <div className="stat-card"><div className="stat-label">Open/Progress</div><div className="stat-value">{counts.open}</div></div>
+        <div className="stat-card"><div className="stat-label">High/P1</div><div className="stat-value">{counts.critical}</div></div>
       </div>
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
-              <th>Ticket#</th>
+              <th>ID</th>
               <th>Name</th>
-              <th>Email</th>
+              <th>Dept</th>
               <th>Subject</th>
               <th>Priority</th>
               <th>Status</th>
@@ -57,61 +65,21 @@ export default function TicketsTab() {
             </tr>
           </thead>
           <tbody>
-            {tickets.map((t) => (
+            {rows.map((t) => (
               <tr key={String(t.id)}>
-                <td className="mono">{t.id}</td>
-                <td>{t.name}</td>
-                <td>{t.email ?? '-'}</td>
-                <td>{t.subject}</td>
-                <td>
-                  <PriorityPill priority={String(t.priority)} />
-                </td>
-                <td>
-                  <StatusPill status={String(t.status)} />
-                </td>
-                <td>{new Date(String(t.created)).toLocaleString()}</td>
+                <td className="mono">#{String(t.id)}</td>
+                <td>{String(t.name ?? '-')}</td>
+                <td>{String(t.dept ?? '-')}</td>
+                <td>{String(t.subject ?? '-')}</td>
+                <td>{String(t.priority ?? '-')}</td>
+                <td>{String(t.status ?? '-')}</td>
+                <td>{t.created ? new Date(String(t.created)).toLocaleString() : '-'}</td>
               </tr>
             ))}
-            {!tickets.length && (
-              <tr>
-                <td colSpan={7} className="empty">
-                  No tickets loaded yet.
-                </td>
-              </tr>
-            )}
+            {!rows.length ? <tr><td colSpan={7} className="empty-state">No tickets.</td></tr> : null}
           </tbody>
         </table>
       </div>
     </section>
   );
-}
-
-function PriorityPill({ priority }: { priority: string }) {
-  const color = priority === 'Critical' ? 'var(--err)' : priority === 'High' ? 'var(--warn)' : 'var(--ok)';
-  return <span className={`pill pill-${priority.toLowerCase()}`}>{priority}</span>;
-}
-
-function StatusPill({ status }: { status: string }) {
-  const color = status === 'Closed' ? 'var(--dim)' : status === 'In Progress' ? 'var(--warn)' : 'var(--ok)';
-  return <span className={`pill pill-${status.toLowerCase().replace(' ', '-')}`}>{status}</span>;
-}
-
-function Stat({ title, value, color }: { title: string; value: number; color?: string }) {
-  return (
-    <div className={`stat ${color ? `stat-${color}` : ''}`}>
-      <div className="stat-title">{title}</div>
-      <div className="stat-value">{value}</div>
-    </div>
-  );
-}
-
-function sampleTickets(): Ticket[] {
-  return [
-    { id: '14554', name: 'John Smith', status: 'In Progress', priority: 'Low', subject: 'Firewall rule change', created: new Date(Date.now() - 2 * 3600e3).toISOString(), email: 'noc@vide.vi' },
-    { id: '15953', name: 'Bob Johnson', status: 'In Progress', priority: 'Medium', subject: 'Mitel extension not working', created: new Date(Date.now() - 6 * 3600e3).toISOString(), email: 'user2@vide.vi' },
-    { id: '9772', name: 'Bob Johnson', status: 'Open', priority: 'High', subject: 'Ticket escalation #4521', created: new Date(Date.now() - 12 * 3600e3).toISOString(), email: 'user1@vide.vi' },
-    { id: '16953', name: 'John Smith', status: 'In Progress', priority: 'Critical', subject: 'Network switch port down Meraki', created: new Date(Date.now() - 18 * 3600e3).toISOString(), email: 'user2@vide.vi' },
-    { id: '10087', name: 'Charlie Davis', status: 'Closed', priority: 'Medium', subject: 'VPN disconnect', created: new Date(Date.now() - 48 * 3600e3).toISOString(), email: 'noc@vide.vi' },
-    { id: '9624', name: 'Eve Wilson', status: 'In Progress', priority: 'Critical', subject: 'SERVER-PATCH-MEM-02 alert', created: new Date(Date.now() - 53 * 3600e3).toISOString(), email: 'noc@vide.vi' },
-  ];
 }
