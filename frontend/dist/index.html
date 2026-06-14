@@ -746,6 +746,7 @@ footer span{color:var(--primary)}
   <button class="tab-btn" onclick="switchTab('ollama',this)" role="tab">🤖 Ollama AI</button>
   <button class="tab-btn" onclick="switchTab('pbx',this)" role="tab">📞 PBX</button>
   <button class="tab-btn" onclick="switchTab('helpdesk',this)" role="tab">🎫 Helpdesk</button>
+  <button class="tab-btn" onclick="switchTab('ssl',this)" role="tab">🔒 SSL Monitor</button>
   <button class="tab-btn btn-s" onclick="switchTab('addtab',this)" role="tab">➕ Add Monitor</button>
 </nav>
 
@@ -1211,6 +1212,75 @@ What would you like to know?</div>
 </div>
 </div>
 
+<!-- ════════════════════ TAB SSL: SSL MONITOR ════════════════════ -->
+<div id="tab-ssl" class="tab-pane">
+  <div class="ctrls">
+    <button onclick="loadSSLData()">🔄 Refresh</button>
+    <button class="btn-g" onclick="openSSLAddModal()">➕ Add Website</button>
+    <input type="text" id="ssl-search" placeholder="🔍 Search websites..." oninput="filterSSLTable()" style="flex:1;max-width:280px">
+    <select id="ssl-filter-status" onchange="filterSSLTable()">
+      <option value="all">All Status</option>
+      <option value="ok">✅ Valid</option>
+      <option value="warn">⚠️ Expiring Soon (≤30d)</option>
+      <option value="crit">❌ Expired / Error</option>
+    </select>
+  </div>
+  <div class="stats-row">
+    <div class="stat s-c"><h3>Total</h3><span id="ssl-total">0</span></div>
+    <div class="stat s-ok"><h3>Valid</h3><span id="ssl-ok">0</span></div>
+    <div class="stat s-w"><h3>Expiring Soon</h3><span id="ssl-warn">0</span></div>
+    <div class="stat s-e"><h3>Expired / Error</h3><span id="ssl-crit">0</span></div>
+  </div>
+  <div class="tbl-wrap" style="max-height:480px">
+    <table id="ssl-table">
+      <thead><tr>
+        <th onclick="sortSSL(0)">Website</th>
+        <th onclick="sortSSL(1)">URL</th>
+        <th onclick="sortSSL(2)">Ping (ms)</th>
+        <th onclick="sortSSL(3)">SSL Status</th>
+        <th onclick="sortSSL(4)">Issuer</th>
+        <th onclick="sortSSL(5)">Expires</th>
+        <th onclick="sortSSL(6)">Days Left</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="ssl-tbody"><tr><td colspan="8" style="text-align:center;color:var(--dim);padding:28px">No websites configured. Click "Add Website" to start monitoring SSL certificates.</td></tr></tbody>
+    </table>
+  </div>
+  <div class="charts-grid">
+    <div class="chart-card"><canvas id="sslDaysChart" height="200"></canvas></div>
+    <div class="chart-card"><canvas id="sslPingChart" height="200"></canvas></div>
+  </div>
+  <div class="events-panel">
+    <div class="events-hdr"><h3>🔒 SSL Events</h3><button class="btn-sm btn-s" onclick="clearEvents('ssl')">Clear</button></div>
+    <div class="evt-feed" id="ssl-events"></div>
+  </div>
+</div>
+
+<!-- ════════════════════ SSL ADD/EDIT MODAL ════════════════════ -->
+<div class="modal-overlay" id="ssl-modal" onclick="if(event.target===this)closeSSLModal()">
+  <div class="modal-card" style="max-width:560px">
+    <div class="modal-hdr"><h3 id="ssl-modal-title">Add Website</h3><button class="btn-sm" onclick="closeSSLModal()">✕</button></div>
+    <input type="hidden" id="ssl-edit-index">
+    <div class="form-row">
+      <div><label>Website Name</label><input type="text" id="ssl-name" placeholder="e.g. Company Portal"></div>
+    </div>
+    <div class="form-row">
+      <div><label>URL (https://...)</label><input type="url" id="ssl-url" placeholder="https://example.com" required></div>
+    </div>
+    <div class="form-row">
+      <div><label>Check Interval (minutes)</label><input type="number" id="ssl-interval" value="60" min="5" max="1440" style="width:120px"></div>
+      <div><label>Alert Threshold (days)</label><input type="number" id="ssl-threshold" value="30" min="1" max="365" style="width:120px"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Tag</label><input type="text" id="ssl-tag" placeholder="Production, Staging, etc." style="width:200px"></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn-s" onclick="closeSSLModal()">Cancel</button>
+      <button class="btn-g" onclick="saveSSLWebsite()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════════════ TAB 8: ADD MONITOR ════════════════════ -->
 <div id="tab-addtab" class="tab-pane">
   <div style="margin-bottom:14px">
@@ -1352,6 +1422,7 @@ const STATE = {
   ollama: { url:'http://localhost:11434', model:'llama3.2', tokens:1024 },
   pbx: { data:[], loaded:false },
   pbx_walk: { loaded:false },
+  ssl: { sites:[], loaded:false, sortCol:2, sortAsc:true },
   alerts: { email:true, tg:true, teams:true }
 };
 const DC_CRITICAL = '192.0.2.7';
@@ -1360,7 +1431,7 @@ let ubuntuChart = null;
 let ntpDriftChart = null;
 let dnsChart = null;
 let refreshTimers = {};
-const REFRESH_INTERVALS = { dc:60, ntp:60, logs:30, ubuntu:60, gsync:120, pbx:60 };
+const REFRESH_INTERVALS = { dc:60, ntp:60, logs:30, ubuntu:60, gsync:120, pbx:60, ssl:60 };
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 
@@ -1529,7 +1600,320 @@ function switchTab(id, btn){
   if(id==='gsync' && !STATE.gsync_loaded){ loadGSyncData(); STATE.gsync_loaded=true; }
   if(id==='pbx' && !STATE.pbx.loaded){ loadPBXData(); loadPBXWalk(); STATE.pbx.loaded=true; }
   if(id==='helpdesk' && !STATE.helpdesk.loaded){ loadHelpdeskTickets(); STATE.helpdesk.loaded=true; }
+  if(id==='ssl' && !STATE.ssl.loaded){ loadSSLData(); STATE.ssl.loaded=true; }
 }
+
+
+
+/* ═════════════════════════════════ SSL MONITOR ═════════════════════════════════ */
+
+async function loadSSLData() {
+  try {
+    const r = await fetch('/api/ssl/status');
+    const data = await r.json();
+    if (Array.isArray(data) && data.length) {
+      STATE.ssl.sites = data.map(s => ({
+        ...s,
+        ping_ms: s.ping_ms ?? '--',
+        ssl_status: s.ssl_status ?? 'unknown',
+        issuer: s.issuer ?? '--',
+        expires: s.expires ?? '--',
+        days_left: s.days_left ?? null
+      }));
+    } else {
+      // Load from localStorage demo data
+      const stored = localStorage.getItem('noc_ssl_sites');
+      if (stored) {
+        STATE.ssl.sites = JSON.parse(stored);
+      } else {
+        // Demo data
+        STATE.ssl.sites = [
+          { id: 1, name: 'Example Corp', url: 'https://example.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 45, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2026-12-31', days_left: 199 },
+          { id: 2, name: 'API Gateway', url: 'https://api.github.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 120, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2027-03-15', days_left: 273 }
+        ];
+      }
+    }
+    STATE.ssl.loaded = true;
+    renderSSLTable();
+    renderSSLCharts();
+    addEvent('ssl', 'info', '🔒', `SSL monitor loaded — ${STATE.ssl.sites.length} site(s)`);
+  } catch (e) {
+    console.error('loadSSLData failed', e);
+    loadSSLDemo();
+  }
+}
+
+function loadSSLDemo() {
+  STATE.ssl.sites = [
+    { id: 1, name: 'Example Corp', url: 'https://example.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 45, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2026-12-31', days_left: 199 },
+    { id: 2, name: 'API Gateway', url: 'https://api.github.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 120, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2027-03-15', days_left: 273 },
+    { id: 3, name: 'Staging Site', url: 'https://staging.example.com', interval: 60, threshold: 30, tag: 'Staging', ping_ms: 89, ssl_status: 'warning', issuer: 'Let\'s Encrypt', expires: '2026-07-15', days_left: 14 }
+  ];
+  STATE.ssl.loaded = true;
+  renderSSLTable();
+  renderSSLCharts();
+  addEvent('ssl', 'warn', '⚠️', 'Using demo SSL data — configure /api/ssl/status endpoint');
+}
+
+function saveSSLData() {
+  localStorage.setItem('noc_ssl_sites', JSON.stringify(STATE.ssl.sites));
+}
+
+function openSSLAddModal(index = -1) {
+  const modal = document.getElementById('ssl-modal');
+  const title = document.getElementById('ssl-modal-title');
+  const editIndex = document.getElementById('ssl-edit-index');
+  
+  if (index >= 0) {
+    const site = STATE.ssl.sites[index];
+    title.textContent = 'Edit Website';
+    editIndex.value = index;
+    document.getElementById('ssl-name').value = site.name;
+    document.getElementById('ssl-url').value = site.url;
+    document.getElementById('ssl-interval').value = site.interval || 60;
+    document.getElementById('ssl-threshold').value = site.threshold || 30;
+    document.getElementById('ssl-tag').value = site.tag || '';
+  } else {
+    title.textContent = 'Add Website';
+    editIndex.value = -1;
+    document.getElementById('ssl-name').value = '';
+    document.getElementById('ssl-url').value = '';
+    document.getElementById('ssl-interval').value = 60;
+    document.getElementById('ssl-threshold').value = 30;
+    document.getElementById('ssl-tag').value = '';
+  }
+  modal.classList.add('visible');
+}
+
+function closeSSLModal() {
+  document.getElementById('ssl-modal').classList.remove('visible');
+}
+
+function saveSSLWebsite() {
+  const name = document.getElementById('ssl-name').value.trim();
+  const url = document.getElementById('ssl-url').value.trim();
+  const interval = parseInt(document.getElementById('ssl-interval').value) || 60;
+  const threshold = parseInt(document.getElementById('ssl-threshold').value) || 30;
+  const tag = document.getElementById('ssl-tag').value.trim();
+  const editIndex = parseInt(document.getElementById('ssl-edit-index').value);
+  
+  if (!name || !url) { toast('Name and URL are required','err'); return; }
+  if (!url.startsWith('http')) { toast('URL must start with http:// or https://','err'); return; }
+  
+  const siteData = { name, url, interval, threshold, tag, ping_ms: '--', ssl_status: 'pending', issuer: '--', expires: '--', days_left: null };
+  
+  if (editIndex >= 0) {
+    const oldId = STATE.ssl.sites[editIndex].id;
+    siteData.id = oldId;
+    STATE.ssl.sites[editIndex] = siteData;
+    toast(`Website "${name}" updated`,'ok',3000);
+  } else {
+    siteData.id = Date.now();
+    STATE.ssl.sites.push(siteData);
+    toast(`Website "${name}" added`,'ok',3000);
+  }
+  
+  saveSSLData();
+  renderSSLTable();
+  renderSSLCharts();
+  closeSSLModal();
+  
+  // Trigger immediate check for new/updated site
+  checkSSLWebsite(siteData);
+}
+
+function deleteSSLWebsite(index) {
+  const name = STATE.ssl.sites[index]?.name;
+  STATE.ssl.sites.splice(index, 1);
+  saveSSLData();
+  renderSSLTable();
+  renderSSLCharts();
+  toast(`Website "${name}" removed`,'warn',2500);
+}
+
+async function checkSSLWebsite(site) {
+  try {
+    const r = await fetch('/api/ssl/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: site.url })
+    });
+    const result = await r.json();
+    
+    // Update site with results
+    site.ping_ms = result.ping_ms ?? '--';
+    site.ssl_status = result.ssl_status ?? 'error';
+    site.issuer = result.issuer ?? '--';
+    site.expires = result.expires ?? '--';
+    site.days_left = result.days_left ?? null;
+    
+    saveSSLData();
+    renderSSLTable();
+    renderSSLCharts();
+    
+    if (result.ssl_status === 'expired' || result.ssl_status === 'error') {
+      addEvent('ssl', 'err', '❌', `SSL check failed for ${site.name}: ${result.error || 'Certificate expired'}`);
+    } else if (result.ssl_status === 'warning') {
+      addEvent('ssl', 'warn', '⚠️', `SSL expiring soon for ${site.name}: ${result.days_left} days left`);
+    } else {
+      addEvent('ssl', 'ok', '✅', `SSL check OK for ${site.name} (${result.ping_ms}ms, ${result.days_left}d left)`);
+    }
+  } catch (e) {
+    site.ssl_status = 'error';
+    site.ping_ms = '--';
+    saveSSLData();
+    renderSSLTable();
+    addEvent('ssl', 'err', '❌', `SSL check error for ${site.name}: ${e.message}`);
+  }
+}
+
+function checkAllSSLWebsites() {
+  STATE.ssl.sites.forEach(site => checkSSLWebsite(site));
+}
+
+function renderSSLTable() {
+  const tbody = document.getElementById('ssl-tbody');
+  const sites = STATE.ssl.sites || [];
+  
+  if (!sites.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:28px">No websites configured. Click "Add Website" to start monitoring SSL certificates.</td></tr>';
+    updateSSLStats([]);
+    return;
+  }
+  
+  // Sort
+  const { sortCol, sortAsc } = STATE.ssl;
+  const sorted = [...sites].sort((a, b) => {
+    let av = a[getSSLColKey(sortCol)], bv = b[getSSLColKey(sortCol)];
+    if (av === null || av === undefined) av = sortAsc ? Infinity : -Infinity;
+    if (bv === null || bv === undefined) bv = sortAsc ? Infinity : -Infinity;
+    if (typeof av === 'string') av = av.toLowerCase();
+    if (typeof bv === 'string') bv = bv.toLowerCase();
+    return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+  
+  tbody.innerHTML = sorted.map((site, idx) => {
+    const origIdx = sites.indexOf(site);
+    const statusClass = site.ssl_status === 'valid' ? 'tag-ok' : (site.ssl_status === 'warning' ? 'tag-warn' : 'tag-err');
+    const statusIcon = site.ssl_status === 'valid' ? '✅' : (site.ssl_status === 'warning' ? '⚠️' : '❌');
+    const daysDisplay = site.days_left !== null ? `${site.days_left}d` : '--';
+    const pingDisplay = site.ping_ms !== '--' ? `${site.ping_ms}ms` : '--';
+    
+    return `<tr>
+      <td><strong style="color:var(--primary)">${esc(site.name)}</strong> ${site.tag ? `<span class="tag tag-info" style="margin-left:6px;font-size:.65rem">${esc(site.tag)}</span>` : ''}</td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--dim)">${esc(site.url)}</td>
+      <td style="font-family:var(--mono);color:${site.ping_ms !== '--' && parseInt(site.ping_ms) > 500 ? 'var(--warn)' : 'var(--text)'}">${pingDisplay}</td>
+      <td><span class="tag ${statusClass}">${statusIcon} ${esc(site.ssl_status)}</span></td>
+      <td style="font-size:.8rem;color:var(--dim)">${esc(site.issuer)}</td>
+      <td style="font-family:var(--mono);font-size:.8rem">${esc(site.expires)}</td>
+      <td style="font-family:var(--mono);font-weight:600;color:${site.days_left !== null && site.days_left <= 30 ? 'var(--err)' : (site.days_left !== null && site.days_left <= 60 ? 'var(--warn)' : 'var(--ok)')}">${daysDisplay}</td>
+      <td>
+        <button class="btn-sm" onclick="checkSSLWebsite(STATE.ssl.sites[${origIdx}])" title="Check Now">🔍</button>
+        <button class="btn-sm" onclick="openSSLAddModal(${origIdx})" title="Edit">✏️</button>
+        <button class="btn-sm btn-s" onclick="deleteSSLWebsite(${origIdx})" title="Delete">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  
+  updateSSLStats(sites);
+}
+
+function getSSLColKey(col) {
+  const keys = ['name', 'url', 'ping_ms', 'ssl_status', 'issuer', 'expires', 'days_left'];
+  return keys[col] || 'name';
+}
+
+function sortSSL(col) {
+  if (STATE.ssl.sortCol === col) {
+    STATE.ssl.sortAsc = !STATE.ssl.sortAsc;
+  } else {
+    STATE.ssl.sortCol = col;
+    STATE.ssl.sortAsc = true;
+  }
+  renderSSLTable();
+}
+
+function updateSSLStats(sites) {
+  const total = sites.length;
+  const ok = sites.filter(s => s.ssl_status === 'valid').length;
+  const warn = sites.filter(s => s.ssl_status === 'warning').length;
+  const crit = sites.filter(s => s.ssl_status === 'expired' || s.ssl_status === 'error').length;
+  
+  const elTotal = document.getElementById('ssl-total');
+  const elOk = document.getElementById('ssl-ok');
+  const elWarn = document.getElementById('ssl-warn');
+  const elCrit = document.getElementById('ssl-crit');
+  
+  if (elTotal) elTotal.textContent = total;
+  if (elOk) elOk.textContent = ok;
+  if (elWarn) elWarn.textContent = warn;
+  if (elCrit) elCrit.textContent = crit;
+}
+
+function renderSSLCharts() {
+  const sites = STATE.ssl.sites || [];
+  if (!sites.length) return;
+  
+  // Days Left Chart (horizontal bar)
+  const daysCanvas = document.getElementById('sslDaysChart');
+  if (daysCanvas) {
+    const sorted = [...sites].sort((a,b) => (a.days_left ?? 9999) - (b.days_left ?? 9999)).slice(0, 10);
+    const labels = sorted.map(s => s.name);
+    const data = sorted.map(s => s.days_left ?? 0);
+    const colors = sorted.map(s => s.days_left !== null && s.days_left <= 30 ? '#ff3860' : (s.days_left !== null && s.days_left <= 60 ? '#ffcc00' : '#00ff9d'));
+    
+    destroyChart(window.sslDaysChart);
+    const ctx = daysCanvas.getContext('2d');
+    window.sslDaysChart = new Chart(ctx, {
+      type: 'bar',
+      indexAxis: 'y',
+      data: { labels, datasets: [{ label: 'Days Until Expiry', data, backgroundColor: colors, borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false, labels: { color: '#e0e0ff' } } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,243,255,0.1)' }, ticks: { color: 'rgba(224,224,255,0.7)' } }, y: { grid: { display: false }, ticks: { color: 'rgba(224,224,255,0.7)' } } } }
+    });
+  }
+  
+  // Ping Chart
+  const pingCanvas = document.getElementById('sslPingChart');
+  if (pingCanvas) {
+    const validSites = sites.filter(s => s.ping_ms !== '--' && typeof s.ping_ms === 'number').slice(0, 10);
+    if (validSites.length) {
+      const labels = validSites.map(s => s.name);
+      const data = validSites.map(s => parseInt(s.ping_ms) || 0);
+      
+      destroyChart(window.sslPingChart);
+      const ctx = pingCanvas.getContext('2d');
+      window.sslPingChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Ping (ms)', data, backgroundColor: '#00f3ff', borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false, labels: { color: '#e0e0ff' } } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,243,255,0.1)' }, ticks: { color: 'rgba(224,224,255,0.7)' } }, x: { grid: { display: false }, ticks: { color: 'rgba(224,224,255,0.7)' } } } }
+      });
+    }
+  }
+}
+
+function filterSSLTable() {
+  const search = document.getElementById('ssl-search')?.value.toLowerCase() || '';
+  const status = document.getElementById('ssl-filter-status')?.value || 'all';
+  const rows = document.querySelectorAll('#ssl-tbody tr');
+  
+  rows.forEach(row => {
+    const cells = row.cells;
+    if (cells.length < 8) return;
+    const name = cells[0].textContent.toLowerCase();
+    const url = cells[1].textContent.toLowerCase();
+    const sslStatus = cells[3].textContent.toLowerCase();
+    
+    const matchesSearch = name.includes(search) || url.includes(search);
+    const matchesStatus = status === 'all' || 
+      (status === 'ok' && sslStatus.includes('valid')) ||
+      (status === 'warn' && (sslStatus.includes('warning') || sslStatus.includes('warn'))) ||
+      (status === 'crit' && (sslStatus.includes('expired') || sslStatus.includes('error')));
+    
+    row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+  });
+}
+
+
 
 /* ════ HELPDESK ════ */
 
@@ -2748,6 +3132,8 @@ function initRefreshTimers(){
   setInterval(()=>{ if(STATE.gsync_loaded) loadGSyncData(); }, REFRESH_INTERVALS.gsync*1000);
   // PBX: every 60s (only if tab was opened)
   setInterval(()=>{ if(STATE.pbx.loaded) loadPBXData(); }, REFRESH_INTERVALS.pbx*1000);
+  // SSL: every 60s (only if tab was opened)
+  setInterval(()=>{ if(STATE.ssl.loaded) checkAllSSLWebsites(); }, REFRESH_INTERVALS.ssl*1000);
 }
 
 function loadSavedConfig(){
