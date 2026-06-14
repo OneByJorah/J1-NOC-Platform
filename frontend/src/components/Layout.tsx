@@ -15,6 +15,7 @@ const tabs = [
 export default function Layout() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
+
   return (
     <div className="layout">
       <header className="app-header">
