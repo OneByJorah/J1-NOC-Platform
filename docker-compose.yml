@@ -163,15 +163,6 @@ services:
     environment:
       - COLLECTIONS=crowdsecurity/linux crowdsecurity/http-cve
 
-  chrony-exporter:
-    image: quay.io/prometheuscommunity/chrony-exporter:latest
-    restart: unless-stopped
-    networks:
-      - internal
-    pid: host
-    command: ["-config.file=/etc/chrony/chrony.conf"]
-
-  snmp-exporter:
     image: prom/snmp-exporter:latest
     restart: unless-stopped
     volumes:
