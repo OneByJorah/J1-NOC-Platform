@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 import json
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,7 @@ from .routers import health, auth, dashboard, notifications, tools, ai, static_d
 
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -46,7 +48,8 @@ def create_app() -> FastAPI:
             body_bytes = await request.body()
             body = json.loads(body_bytes.decode() if body_bytes else "{}")
         except Exception as exc:
-            return JSONResponse({"Success": False, "Error": str(exc)}, status_code=200)
+            logger.exception("Invalid JSON payload received on /forcerepl", exc_info=exc)
+            return JSONResponse({"Success": False, "Error": "Invalid request payload"}, status_code=200)
         return JSONResponse({"Success": True, "Request": body})
 
     app.include_router(static_data.router, prefix="/api")
