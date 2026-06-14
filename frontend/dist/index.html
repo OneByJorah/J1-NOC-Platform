@@ -1100,19 +1100,16 @@ What would you like to know?</div>
   <div class="ctrls">
     <button onclick="loadPBXData()">🔄 Refresh</button>
     <button class="btn-w" onclick="loadPBXSNMP()">📡 SNMP Walk</button>
+    <input type="text" id="pbx-search" placeholder="🔍 Search PBX..." oninput="filterPBX()" style="flex:1;min-width:160px;max-width:260px">
     <span id="pbx-status" style="font-family:var(--mono);font-size:.75rem;color:var(--dim)"></span>
   </div>
-  <div class="stats-row">
-    <div class="stat s-c"><h3>Total PBXs</h3><span id="pbx-total">0</span></div>
-    <div class="stat s-ok"><h3>Healthy</h3><span id="pbx-healthy">0</span></div>
-    <div class="stat s-w"><h3>Degraded</h3><span id="pbx-degraded">0</span></div>
-    <div class="stat s-e"><h3>Critical</h3><span id="pbx-critical">0</span></div>
+  <div class="ntp-status-strip">
+    <div class="ntp-ss"><label>Total PBXs</label><span id="pbx-total" style="color:var(--primary)">0</span></div>
+    <div class="ntp-ss s-ok"><label>Healthy</label><span id="pbx-healthy" style="color:var(--ok)">0</span></div>
+    <div class="ntp-ss s-w"><label>Degraded</label><span id="pbx-degraded" style="color:var(--warn)">0</span></div>
+    <div class="ntp-ss s-e"><label>Critical</label><span id="pbx-critical" style="color:var(--err)">0</span></div>
   </div>
-  <div class="charts-grid">
-    <div class="chart-card"><canvas id="pbxStatusChart" height="200"></canvas></div>
-    <div class="chart-card"><canvas id="pbxCallsChart" height="200"></canvas></div>
-  </div>
-  <div class="tbl-wrap">
+  <div class="tbl-wrap" style="max-height:480px">
     <table id="pbx-table">
       <thead><tr>
         <th onclick="sortPBX(0)">PBX Name</th><th onclick="sortPBX(1)">Host</th>
@@ -1120,29 +1117,47 @@ What would you like to know?</div>
         <th onclick="sortPBX(4)">Uptime %</th><th onclick="sortPBX(5)">Active Calls</th>
         <th>Actions</th>
       </tr></thead>
-      <tbody id="pbx-tbody"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:28px">Click Refresh to load PBX status</td></tr></tbody>
+      <tbody id="pbx-tbody"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:28px">Load PBX data or click Refresh.</td></tr></tbody>
     </table>
   </div>
+  <div class="chart-card"><canvas id="pbxStatusChart" height="180"></canvas></div>
   <div class="events-panel">
     <div class="events-hdr"><h3>📡 SNMP Walk Data</h3><button class="btn-sm btn-s" onclick="clearEvents('pbx')">Clear</button></div>
     <div class="evt-feed" id="pbx-events" style="font-family:var(--mono);font-size:.7rem;max-height:300px;overflow:auto"></div>
   </div>
 </div>
+</div>
 
 <!-- ════════════════════ TAB 9: HELPDESK ════════════════════ -->
 <div id="tab-helpdesk" class="tab-pane">
+  <div class="crit-card" id="helpdesk-crit-card">
+    <div class="crit-hdr">
+      <h2>🎫 HELPDESK QUEUE <small style="font-size:.7em;color:var(--dim);font-weight:400">Active tickets</small></h2>
+      <div id="helpdesk-dot" class="pdot ok"></div>
+    </div>
+    <div id="helpdesk-details" style="font-family:var(--mono);font-size:.82rem;color:var(--dim)">Loading…</div>
+  </div>
   <div class="ctrls">
     <button onclick="loadHelpdeskTickets()">🔄 Refresh</button>
-    <input id="helpdesk-ticket-id" placeholder="Ticket ID" style="width:120px">
+    <input type="text" id="helpdesk-ticket-id" placeholder="Ticket ID" style="width:120px">
     <button onclick="loadHelpdeskTicket()">🔎 View Ticket</button>
     <button class="btn-g" onclick="openCreateTicket()">➕ Create Ticket</button>
-    <span id="helpdesk-status" style="font-family:var(--mono);font-size:.75rem;color:var(--dim)"></span>
+  </div>
+  <div class="stats-row">
+    <div class="stat s-c"><h3>Total</h3><span id="helpdesk-total">0</span></div>
+    <div class="stat s-ok"><h3>Open</h3><span id="helpdesk-open">0</span></div>
+    <div class="stat s-w"><h3>In Progress</h3><span id="helpdesk-progress">0</span></div>
+    <div class="stat s-e"><h3>Closed</h3><span id="helpdesk-closed">0</span></div>
   </div>
   <div class="tbl-wrap">
     <table id="helpdesk-table">
-      <thead><tr><th>Ticket#</th><th>Name</th><th>Email</th><th>Subject</th><th>Status</th><th>Created</th></tr></thead>
-      <tbody id="helpdesk-tbody"><tr><td colspan="6" style="text-align:center;color:var(--dim);padding:24px">Load tickets to see active helpdesk items.</td></tr></tbody>
+      <thead><tr><th>Ticket#</th><th>Name</th><th>Email</th><th>Subject</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody id="helpdesk-tbody"><tr><td colspan="7" style="text-align:center;color:var(--dim);padding:28px">Load tickets to see active helpdesk items.</td></tr></tbody>
     </table>
+  </div>
+  <div class="events-panel">
+    <div class="events-hdr"><h3>🎫 Helpdesk Events</h3><button class="btn-sm btn-s" onclick="clearEvents('helpdesk')">Clear</button></div>
+    <div class="evt-feed" id="helpdesk-events"></div>
   </div>
   <div id="helpdesk-create" class="card" style="display:none;margin-top:14px">
     <div class="card-hdr"><h3>Create Ticket</h3><button class="btn-sm btn-s" onclick="document.getElementById('helpdesk-create').style.display='none'">✕ Close</button></div>
@@ -1154,6 +1169,7 @@ What would you like to know?</div>
     <div class="form-row full" style="margin-top:8px"><label>Message</label><textarea id="h-message" rows="4" placeholder="Describe the issue"></textarea></div>
     <button class="btn-g" style="margin-top:10px" onclick="submitTicket()">📨 Submit</button>
   </div>
+</div>
 </div>
 
 <!-- ════════════════════ TAB 8: ADD MONITOR ════════════════════ -->
@@ -1455,6 +1471,7 @@ function switchTab(id, btn){
   if(id==='ubuntu' && !STATE.ubuntu.loaded){ loadUbuntuData(); STATE.ubuntu.loaded=true; }
   if(id==='gsync' && !STATE.gsync_loaded){ loadGSyncData(); STATE.gsync_loaded=true; }
   if(id==='pbx' && !STATE.pbx.loaded){ loadPBXData(); STATE.pbx.loaded=true; }
+  if(id==='helpdesk' && !STATE.helpdesk.loaded){ loadHelpdeskTickets(); STATE.helpdesk.loaded=true; }
 }
 
 /* ════ HELPDESK ════ */
@@ -1580,9 +1597,11 @@ function loadHelpdeskTickets(){
   fetch('/api/helpdesk/tickets').then(r=>r.json()).then(data=>renderHelpdeskTickets(data)).catch(()=>{renderHelpdeskTickets([]);}).finally(()=>{ const el=document.getElementById('helpdesk-status'); if(el) el.textContent=''; });
 }
 function renderHelpdeskTickets(data){
-  const items=Array.isArray(data)?data:((data&&data.tickets)?data.tickets:[]); const tbody=document.getElementById('helpdesk-tbody'); if(!tbody) return;
-  const rows=items.map(t=>`<tr><td>${t.number??t.id??'—'}</td><td>${t.name??t.fullname??'—'}</td><td>${t.email??'—'}</td><td>${t.subject??t.title??'—'}</td><td>${t.status??'—'}</td><td>${t.created??t.created_at??'—'}</td></tr>`).join('');
-  tbody.innerHTML=rows||`<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:24px">No tickets found.</td></tr>`;
+  const tbody = document.getElementById('helpdesk-tbody');
+  if (!tbody) return;
+  const items = Array.isArray(data) ? data : (data && data.tickets ? data.tickets : []);
+  const rows = items.map(t => `<tr><td>${t.id || '--'}</td><td>${t.name || '--'}</td><td>${t.email || '--'}</td><td>${t.subject || '--'}</td><td>${t.status || '--'}</td><td>${t.created || '--'}</td></tr>`).join('');
+  tbody.innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:24px">No tickets found.</td></tr>`;
 }
 function loadHelpdeskTicket(){
   const id=document.getElementById('helpdesk-ticket-id')?.value?.trim(); if(!id){ toast('Enter a ticket ID','warn'); return; }

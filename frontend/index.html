@@ -1471,6 +1471,7 @@ function switchTab(id, btn){
   if(id==='ubuntu' && !STATE.ubuntu.loaded){ loadUbuntuData(); STATE.ubuntu.loaded=true; }
   if(id==='gsync' && !STATE.gsync_loaded){ loadGSyncData(); STATE.gsync_loaded=true; }
   if(id==='pbx' && !STATE.pbx.loaded){ loadPBXData(); STATE.pbx.loaded=true; }
+  if(id==='helpdesk' && !STATE.helpdesk.loaded){ loadHelpdeskTickets(); STATE.helpdesk.loaded=true; }
 }
 
 /* ════ HELPDESK ════ */
@@ -1596,9 +1597,11 @@ function loadHelpdeskTickets(){
   fetch('/api/helpdesk/tickets').then(r=>r.json()).then(data=>renderHelpdeskTickets(data)).catch(()=>{renderHelpdeskTickets([]);}).finally(()=>{ const el=document.getElementById('helpdesk-status'); if(el) el.textContent=''; });
 }
 function renderHelpdeskTickets(data){
-  const items=Array.isArray(data)?data:((data&&data.tickets)?data.tickets:[]); const tbody=document.getElementById('helpdesk-tbody'); if(!tbody) return;
-  const rows=items.map(t=>`<tr><td>${t.number??t.id??'—'}</td><td>${t.name??t.fullname??'—'}</td><td>${t.email??'—'}</td><td>${t.subject??t.title??'—'}</td><td>${t.status??'—'}</td><td>${t.created??t.created_at??'—'}</td></tr>`).join('');
-  tbody.innerHTML=rows||`<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:24px">No tickets found.</td></tr>`;
+  const tbody = document.getElementById('helpdesk-tbody');
+  if (!tbody) return;
+  const items = Array.isArray(data) ? data : (data && data.tickets ? data.tickets : []);
+  const rows = items.map(t => `<tr><td>${t.id || '--'}</td><td>${t.name || '--'}</td><td>${t.email || '--'}</td><td>${t.subject || '--'}</td><td>${t.status || '--'}</td><td>${t.created || '--'}</td></tr>`).join('');
+  tbody.innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:24px">No tickets found.</td></tr>`;
 }
 function loadHelpdeskTicket(){
   const id=document.getElementById('helpdesk-ticket-id')?.value?.trim(); if(!id){ toast('Enter a ticket ID','warn'); return; }
