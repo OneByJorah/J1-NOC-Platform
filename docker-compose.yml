@@ -158,6 +158,9 @@ services:
   crowdsec:
     image: crowdsecurity/crowdsec:latest
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - crowdsec_data:/var/lib/crowdsec
       - crowdsec_config:/etc/crowdsec
