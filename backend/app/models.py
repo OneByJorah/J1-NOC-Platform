@@ -39,7 +39,7 @@ class Customer(Base):
     address = Column(Text)
     tenant_id = Column(String(255), nullable=False, default="default")
     is_active = Column(Boolean, nullable=False, default=True)
-    metadata = Column(JSON, nullable=False, default={})
+    extra_metadata = Column("metadata", JSON, nullable=False, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -52,7 +52,7 @@ class Site(Base):
     name = Column(String(255), nullable=False)
     location = Column(Text)
     timezone = Column(String(64), nullable=False, default="UTC")
-    metadata = Column(JSON, nullable=False, default={})
+    extra_metadata = Column("metadata", JSON, nullable=False, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -71,7 +71,7 @@ class User(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     is_locked = Column(Boolean, nullable=False, default=False)
     last_login_at = Column(DateTime(timezone=True))
-    metadata = Column(JSON, nullable=False, default={})
+    extra_metadata = Column("metadata", JSON, nullable=False, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
