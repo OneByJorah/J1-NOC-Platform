@@ -183,8 +183,27 @@ header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1p
 .tab-btn.active{color:var(--primary);background:rgba(0,243,255,0.1);border-bottom:2px solid var(--primary)}
 
 .tab-btn .tbadge{position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:var(--err);color:#fff;font-size:.6rem;display:flex;align-items:center;justify-content:center;padding:0 3px}
-
 .tab-btn .tbadge.hidden{display:none}
+
+/* Tianji-style health dot in tab button */
+.tab-btn .hdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:4px;vertical-align:middle}
+.tab-btn .hdot.ok{background:var(--ok);box-shadow:0 0 4px var(--ok)}
+.tab-btn .hdot.warn{background:var(--warn);box-shadow:0 0 4px var(--warn)}
+.tab-btn .hdot.err{background:var(--err);box-shadow:0 0 4px var(--err)}
+
+/* Tianji-style horizontal progress bars */
+.tbar{display:flex;align-items:center;gap:10px;padding:4px 0}
+.tbar-label{width:120px;font-family:var(--mono);font-size:.78rem;color:var(--text);flex-shrink:0;text-align:right}
+.tbar-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;position:relative}
+.tbar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.tbar-val{width:60px;font-family:var(--mono);font-size:.76rem;color:var(--dim)}
+
+/* Tianji-style status badge */
+.sbadge{display:inline-block;padding:2px 8px;border-radius:10px;font-family:var(--mono);font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.sbadge.ok{background:rgba(0,200,83,0.15);color:var(--ok);border:1px solid rgba(0,200,83,0.3)}
+.sbadge.warn{background:rgba(255,171,0,0.15);color:var(--warn);border:1px solid rgba(255,171,0,0.3)}
+.sbadge.err{background:rgba(255,61,87,0.15);color:var(--err);border:1px solid rgba(255,61,87,0.3)}
+.sbadge.none{background:rgba(255,255,255,0.08);color:var(--dim);border:1px solid rgba(255,255,255,0.15)}
 
 /* TAB CONTENT */
 
@@ -735,17 +754,17 @@ footer span{color:var(--primary)}
 
 <!-- TABS -->
 <nav class="tab-nav" role="tablist">
-  <button class="tab-btn active" onclick="switchTab('dc',this)" role="tab">🖥 AD Rep<span class="tbadge hidden" id="badge-dc">0</span></button>
-  <button class="tab-btn" onclick="switchTab('ntp',this)" role="tab">⏱ NTP<span class="tbadge hidden" id="badge-ntp">0</span></button>
-  <button class="tab-btn" onclick="switchTab('dns',this)" role="tab">🌐 DNS</button>
-  <button class="tab-btn" onclick="switchTab('logs',this)" role="tab">📋 Logs<span class="tbadge hidden" id="badge-logs">0</span></button>
-  <button class="tab-btn" onclick="switchTab('gsync',this)" role="tab">☁️ Google<span class="tbadge hidden" id="badge-gsync">0</span></button>
-  <button class="tab-btn" onclick="switchTab('ubuntu',this)" role="tab">🐧 Brain</button>
-  <button class="tab-btn" onclick="switchTab('ollama',this)" role="tab">🤖 Ollama</button>
-  <button class="tab-btn" onclick="switchTab('pbx',this)" role="tab">📞 VoIP</button>
-  <button class="tab-btn" onclick="switchTab('helpdesk',this)" role="tab">🎫 Tickets</button>
-  <button class="tab-btn" onclick="switchTab('winagents',this)" role="tab">💻 Endpoints</button>
-  <button class="tab-btn" onclick="switchTab('ssl',this)" role="tab">🔒 SSL</button>
+  <button class="tab-btn active" onclick="switchTab('dc',this)" role="tab">🖥 AD Rep<span class="hdot ok" id="hdot-dc"></span><span class="tbadge hidden" id="badge-dc">0</span></button>
+  <button class="tab-btn" onclick="switchTab('ntp',this)" role="tab">⏱ NTP<span class="hdot ok" id="hdot-ntp"></span><span class="tbadge hidden" id="badge-ntp">0</span></button>
+  <button class="tab-btn" onclick="switchTab('dns',this)" role="tab">🌐 DNS<span class="hdot ok" id="hdot-dns"></span></button>
+  <button class="tab-btn" onclick="switchTab('logs',this)" role="tab">📋 Logs<span class="hdot ok" id="hdot-logs"></span><span class="tbadge hidden" id="badge-logs">0</span></button>
+  <button class="tab-btn" onclick="switchTab('gsync',this)" role="tab">☁️ Google<span class="hdot ok" id="hdot-gsync"></span><span class="tbadge hidden" id="badge-gsync">0</span></button>
+  <button class="tab-btn" onclick="switchTab('ubuntu',this)" role="tab">🐧 Brain<span class="hdot ok" id="hdot-ubuntu"></span></button>
+  <button class="tab-btn" onclick="switchTab('ollama',this)" role="tab">🤖 Ollama<span class="hdot ok" id="hdot-ollama"></span></button>
+  <button class="tab-btn" onclick="switchTab('pbx',this)" role="tab">📞 VoIP<span class="hdot ok" id="hdot-pbx"></span></button>
+  <button class="tab-btn" onclick="switchTab('helpdesk',this)" role="tab">🎫 Tickets<span class="hdot ok" id="hdot-helpdesk"></span></button>
+  <button class="tab-btn" onclick="switchTab('winagents',this)" role="tab">💻 Endpoints<span class="hdot ok" id="hdot-winagents"></span></button>
+  <button class="tab-btn" onclick="switchTab('ssl',this)" role="tab">🔒 SSL<span class="hdot ok" id="hdot-ssl"></span></button>
   <button class="tab-btn btn-s" onclick="switchTab('addtab',this)" role="tab">➕ Add</button>
 </nav>
 
@@ -1100,6 +1119,7 @@ What would you like to know?</div>
 <div id="tab-pbx" class="tab-pane">
   <div class="ctrls">
     <button onclick="loadPBXData()">🔄 Refresh</button>
+    <span class="sbadge ok" id="pbx-status-badge" style="margin-left:8px">--</span>
     <div class="ubuntu-endpoint">
       <span>📞 PBX Server:</span>
       <input type="text" id="pbx-api" placeholder="http://pbx-server/status.json" value="">
@@ -1109,20 +1129,20 @@ What would you like to know?</div>
   <div class="ubuntu-grid" id="pbx-metrics">
     <div class="ub-metric">
       <label>CPU Usage</label>
-      <div class="gauge-wrap"><svg class="gauge-svg" viewBox="0 0 80 80"><circle class="gauge-bg" cx="40" cy="40" r="32"/><circle class="gauge-fill" id="pbx-cpu-gauge" cx="40" cy="40" r="32" stroke="var(--primary)" stroke-dasharray="201 201" stroke-dashoffset="201"/></svg></div>
       <span class="ub-val" id="pbx-cpu-val" style="color:var(--primary)">--%</span>
+      <div class="tbar-track" style="margin-top:4px"><div class="tbar-fill" id="pbx-cpu-bar" style="width:0%;background:var(--primary)"></div></div>
       <span class="ub-sub" id="pbx-cpu-cores">-- cores</span>
     </div>
     <div class="ub-metric">
       <label>Memory</label>
-      <div class="gauge-wrap"><svg class="gauge-svg" viewBox="0 0 80 80"><circle class="gauge-bg" cx="40" cy="40" r="32"/><circle class="gauge-fill" id="pbx-ram-gauge" cx="40" cy="40" r="32" stroke="var(--ok)" stroke-dasharray="201 201" stroke-dashoffset="201"/></svg></div>
       <span class="ub-val" id="pbx-ram-val" style="color:var(--ok)">--%</span>
+      <div class="tbar-track" style="margin-top:4px"><div class="tbar-fill" id="pbx-ram-bar" style="width:0%;background:var(--ok)"></div></div>
       <span class="ub-sub" id="pbx-ram-detail">-- / -- GB</span>
     </div>
     <div class="ub-metric">
       <label>Disk Usage</label>
-      <div class="gauge-wrap"><svg class="gauge-svg" viewBox="0 0 80 80"><circle class="gauge-bg" cx="40" cy="40" r="32"/><circle class="gauge-fill" id="pbx-disk-gauge" cx="40" cy="40" r="32" stroke="var(--warn)" stroke-dasharray="201 201" stroke-dashoffset="201"/></svg></div>
       <span class="ub-val" id="pbx-disk-val" style="color:var(--warn)">--%</span>
+      <div class="tbar-track" style="margin-top:4px"><div class="tbar-fill" id="pbx-disk-bar" style="width:0%;background:var(--warn)"></div></div>
       <span class="ub-sub" id="pbx-disk-detail">-- / -- GB</span>
     </div>
     <div class="ub-metric">
@@ -1170,6 +1190,7 @@ What would you like to know?</div>
   <div class="crit-card" id="winagents-crit-card">
     <div class="crit-hdr">
       <h2>💻 WINDOWS AGENTS <small style="font-size:.7em;color:var(--dim);font-weight:400">Connected Windows endpoints</small></h2>
+      <span class="sbadge ok" id="winagents-status-badge" style="margin-left:8px">--</span>
       <div id="winagents-dot" class="pdot ok"></div>
     </div>
     <div id="winagents-details" style="font-family:var(--mono);font-size:.82rem;color:var(--dim)">Loading…</div>
@@ -1232,6 +1253,7 @@ What would you like to know?</div>
   <div class="crit-card" id="helpdesk-crit-card">
     <div class="crit-hdr">
       <h2>🎫 HELPDESK QUEUE <small style="font-size:.7em;color:var(--dim);font-weight:400">Active tickets</small></h2>
+      <span class="sbadge ok" id="helpdesk-status-badge" style="margin-left:8px">--</span>
       <div id="helpdesk-dot" class="pdot ok"></div>
     </div>
     <div id="helpdesk-details" style="font-family:var(--mono);font-size:.82rem;color:var(--dim)">Loading…</div>
@@ -1275,6 +1297,7 @@ What would you like to know?</div>
 <div id="tab-ssl" class="tab-pane">
   <div class="ctrls">
     <button onclick="loadSSLData()">🔄 Refresh</button>
+    <span class="sbadge ok" id="ssl-status-badge" style="margin-left:8px">--</span>
     <div class="ssl-summary" id="ssl-summary" style="display:flex;gap:12px;align-items:center;font-family:var(--mono);font-size:.8rem">
       <span id="ssl-total" style="color:var(--dim)">-- domains</span>
       <span id="ssl-ok" style="color:var(--ok)">-- OK</span>
@@ -1284,8 +1307,22 @@ What would you like to know?</div>
     </div>
   </div>
 
+  <!-- 90-Day Uptime Heatmap (Tianji-inspired) -->
+  <div class="card" style="padding:14px 18px;margin-bottom:10px">
+    <div class="card-hdr"><h3>📊 90-Day Uptime Heatmap</h3></div>
+    <div id="ssl-uptime-heatmap" style="display:flex;flex-direction:column;gap:6px">
+      <span style="color:var(--dim)">Loading uptime data...</span>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:8px;font-family:var(--mono);font-size:.7rem;color:var(--dim)">
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--ok);border-radius:2px;margin-right:3px;vertical-align:middle"></span>Up</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--warn);border-radius:2px;margin-right:3px;vertical-align:middle"></span>Degraded</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--err);border-radius:2px;margin-right:3px;vertical-align:middle"></span>Down</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:rgba(255,255,255,0.08);border-radius:2px;margin-right:3px;vertical-align:middle"></span>No data</span>
+    </div>
+  </div>
+
   <div class="ssl-grid">
-    <!-- Certificate Expiry Cards -->
+    <!-- Certificate Expiry -->
     <div class="card" style="padding:14px 18px">
       <div class="card-hdr"><h3>📜 Certificate Expiry</h3></div>
       <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.78rem">
@@ -1636,8 +1673,6 @@ function switchTab(id, btn){
   if(id==='helpdesk' && !STATE.helpdesk.loaded){ loadHelpdeskTickets(); STATE.helpdesk.loaded=true; }
 }
 
-/*
-
 /* ═════════════════════════════════ WINDOWS AGENTS ══════════════════════════════ */
 
 STATE.winagents = { agents: [], loaded: false, sortCol: 0, sortAsc: true, selectedAgent: null };
@@ -1748,6 +1783,16 @@ function updateWAStats(agents) {
   document.getElementById('wa-online').textContent = online;
   document.getElementById('wa-stale').textContent = stale;
   document.getElementById('wa-offline').textContent = offline;
+
+  // Tianji-style status badge
+  const badge = document.getElementById('winagents-status-badge');
+  if(badge){
+    if(!total){ badge.textContent='No agents'; badge.className='sbadge none'; }
+    else if(offline===0 && stale===0){ badge.textContent='All Online'; badge.className='sbadge ok'; }
+    else if(offline>0){ badge.textContent=Offline+' Offline'; badge.className='sbadge err'; }
+    else if(stale>0){ badge.textContent=stale+' Stale'; badge.className='sbadge warn'; }
+  }
+  updateHealthDots();
 }
 
 function filterWinAgents() {
@@ -1947,9 +1992,9 @@ function markPBXMobileFallback() {
 }
 
 function renderPBXMetrics(item){
-  setGauge('pbx-cpu-gauge', item.cpu, (item.cpu||0)>85?'var(--err)':(item.cpu||0)>65?'var(--warn)':'var(--primary)');
-  setGauge('pbx-ram-gauge', item.memory, (item.memory||0)>85?'var(--err)':(item.memory||0)>65?'var(--warn)':'var(--ok)');
-  setGauge('pbx-disk-gauge', item.disk, (item.disk||0)>90?'var(--err)':(item.disk||0)>75?'var(--warn)':'var(--warn)');
+  setBar('pbx-cpu-bar', item.cpu, (item.cpu||0)>85?'var(--err)':(item.cpu||0)>65?'var(--warn)':'var(--primary)');
+  setBar('pbx-ram-bar', item.memory, (item.memory||0)>85?'var(--err)':(item.memory||0)>65?'var(--warn)':'var(--ok)');
+  setBar('pbx-disk-bar', item.disk, (item.disk||0)>90?'var(--err)':(item.disk||0)>75?'var(--warn)':'var(--warn)');
   const cpuVal=document.getElementById('pbx-cpu-val'); if(cpuVal) cpuVal.textContent=(item.cpu??0)+'%';
   const cpuC=document.getElementById('pbx-cpu-cores'); if(cpuC) cpuC.textContent=(item.cpu_cores||'--')+' cores @ '+(item.cpu_mhz||'--')+'MHz';
   const ramVal=document.getElementById('pbx-ram-val'); if(ramVal) ramVal.textContent=(item.memory??0).toFixed(1)+'%';
@@ -2014,6 +2059,13 @@ function loadPBXDemo(){
   renderPBXMetrics(item);
   renderPBXChart([item]);
   addEvent('pbx','info','📞','PBX demo mode loaded');
+  // Update PBX status badge
+  const pbxBadge=document.getElementById('pbx-status-badge');
+  if(pbxBadge){
+    pbxBadge.textContent='All Systems UP';
+    pbxBadge.className='sbadge ok';
+  }
+  updateHealthDots();
 }
 
 function loadHelpdeskTickets(){
@@ -2026,6 +2078,13 @@ function renderHelpdeskTickets(data){
   const items = Array.isArray(data) ? data : (data && data.tickets ? data.tickets : []);
   const rows = items.map(t => `<tr><td>${t.id || '--'}</td><td>${t.name || '--'}</td><td>${t.email || '--'}</td><td>${t.subject || '--'}</td><td>${t.status || '--'}</td><td>${t.created || '--'}</td></tr>`).join('');
   tbody.innerHTML = rows || `<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:24px">No tickets found.</td></tr>`;
+  // Update helpdesk status badge
+  const badge=document.getElementById('helpdesk-status-badge');
+  if(badge){
+    const open=items.filter(t=>t.status==='open'||t.status==='new').length;
+    badge.textContent=items.length+' tickets'+ (open>0? ' · '+open+' open' : '');
+    badge.className='sbadge '+(open>0?'warn':'ok');
+  }
 }
 function loadHelpdeskTicket(){
   const id=document.getElementById('helpdesk-ticket-id')?.value?.trim(); if(!id){ toast('Enter a ticket ID','warn'); return; }
@@ -2040,16 +2099,18 @@ function submitTicket(){
 
 async function loadSSLData(){
   try {
-    const [certRes, respRes] = await Promise.all([
-      fetch('/api/ssl/certs'), fetch('/api/ssl/response')
+    const [certRes, respRes, uptimeRes] = await Promise.all([
+      fetch('/api/ssl/certs'), fetch('/api/ssl/response'), fetch('/api/ssl/uptime')
     ]);
     const certs = await certRes.json();
     const response = await respRes.json();
+    const uptime = await uptimeRes.json();
     STATE.ssl.certs = certs;
     STATE.ssl.response = response;
     renderSSLCerts(certs);
     renderSSLResponse(response);
     renderSSLTimeline(certs);
+    renderSSLUptime(uptime);
     const ok = certs.filter(c=>c.status==='ok').length;
     const warn = certs.filter(c=>c.status==='warn').length;
     const crit = certs.filter(c=>c.status==='critical').length;
@@ -2060,6 +2121,14 @@ async function loadSSLData(){
     document.getElementById('ssl-critical').textContent = crit+' expired';
     document.getElementById('ssl-down').textContent = down+' down';
     addEvent('ssl','ok','🔒','SSL data loaded — '+certs.length+' domains monitored');
+    // Update SSL status badge
+    const sslBadge=document.getElementById('ssl-status-badge');
+    if(sslBadge){
+      if(crit>0){ sslBadge.textContent=crit+' Critical'; sslBadge.className='sbadge err'; }
+      else if(warn>0){ sslBadge.textContent=warn+' Warning'; sslBadge.className='sbadge warn'; }
+      else { sslBadge.textContent='All OK'; sslBadge.className='sbadge ok'; }
+    }
+    updateHealthDots();
   } catch(e){
     addEvent('ssl','warn','⚠️','SSL data load failed: '+e.message);
   }
@@ -2121,9 +2190,28 @@ function renderSSLTimeline(certs){
       </div>`;
     }).join('')}
   </div>`;
+function renderSSLUptime(uptime){
+  const box = document.getElementById('ssl-uptime-heatmap');
+  if(!uptime || !Object.keys(uptime).length){ box.innerHTML = '<span style="color:var(--dim)">No uptime data</span>'; return; }
+  const today = new Date(); today.setHours(0,0,0,0);
+  box.innerHTML = Object.entries(uptime).map(([domain, data])=>{
+    const cells = data.map(d=>{
+      const dt = new Date(d.ts);
+      const diff = Math.floor((today - dt)/(24*60*60*1000));
+      const clr = d.status==='ok' ? 'var(--ok)' : d.status==='degraded' ? 'var(--warn)' : 'var(--err)';
+      const label = diff===0 ? 'Today' : diff===1 ? 'Yesterday' : diff+'d ago';
+      return `<span title="${domain} — ${label}: ${d.status}" style="display:inline-block;width:10px;height:10px;background:${clr};border-radius:2px;flex-shrink:0"></span>`;
+    }).join('');
+    const recent90 = data.slice(-90);
+    const upCount = recent90.filter(d=>d.status==='ok').length;
+    const pct = Math.round((upCount/recent90.length)*100);
+    return `<div style="display:flex;align-items:center;gap:8px">
+      <span style="width:160px;font-family:var(--mono);font-size:.76rem;color:var(--text);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${domain}</span>
+      <div style="display:flex;gap:1px;flex:1;overflow:hidden">${cells.slice(-90)}</div>
+      <span style="width:44px;text-align:right;font-family:var(--mono);font-size:.72rem;color:${pct>=99?'var(--ok)':pct>=95?'var(--warn)':'var(--err)'}">${pct}%</span>
+    </div>`;
+  }).join('');
 }
-
-/* ════ EVENTS / FEED ════ */
 const allEvents = { dc:[], ntp:[], logs:[], gsync:[], ubuntu:[], pbx:[], winagents:[], ssl:[] };
 function addEvent(feed, level, icon, msg){
   const time = new Date().toLocaleTimeString();
@@ -2843,6 +2931,44 @@ function setGauge(id, pct, color){
   const offset=circ*(1-Math.min(1,pct/100));
   el.style.strokeDashoffset=offset;
   if(color) el.style.stroke=color;
+}
+
+function setBar(id, pct, color){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.style.width=Math.min(100,Math.max(0,pct))+'%';
+  if(color) el.style.background=color;
+}
+
+/* Update tab button health dots based on latest data */
+function updateHealthDots(){
+  // PBX tab
+  const pbxDot=document.getElementById('hdot-pbx');
+  if(pbxDot && STATE.pbx.data && STATE.pbx.data.length){
+    const p=STATE.pbx.data[0];
+    const issues=(p.cpu>85?1:0)+(p.memory>85?1:0)+(p.disk>90?1:0);
+    pbxDot.className='hdot '+(issues>1?'err':issues>0?'warn':'ok');
+  }
+  // SSL tab
+  const sslDot=document.getElementById('hdot-ssl');
+  if(sslDot && STATE.ssl.certs && STATE.ssl.certs.length){
+    const crit=STATE.ssl.certs.filter(c=>c.status==='critical').length;
+    const warn=STATE.ssl.certs.filter(c=>c.status==='warn').length;
+    sslDot.className='hdot '+(crit>0?'err':warn>0?'warn':'ok');
+  }
+  // WinAgents tab
+  const waDot=document.getElementById('hdot-winagents');
+  if(waDot && STATE.winagents.agents && STATE.winagents.agents.length){
+    const off=STATE.winagents.agents.filter(a=>a.status==='offline').length;
+    const stl=STATE.winagents.agents.filter(a=>a.status==='stale').length;
+    waDot.className='hdot '+(off>0?'err':stl>0?'warn':'ok');
+  }
+  // DNS tab
+  const dnsDot=document.getElementById('hdot-dns');
+  if(dnsDot && STATE.dns && STATE.dns.results && STATE.dns.results.length){
+    const fails=STATE.dns.results.filter(r=>r.avg>=900).length;
+    dnsDot.className='hdot '+(fails>0?'warn':'ok');
+  }
 }
 
 function renderUbuntuData(data){
