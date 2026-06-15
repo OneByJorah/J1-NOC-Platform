@@ -188,11 +188,9 @@ header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1p
 
 /* TAB CONTENT */
 
-.tab-pane{display:none}
+.tab-pane{display:none;opacity:0;transform:translateY(4px);transition:opacity .2s ease,transform .2s ease}
 
-.tab-pane.active{display:block;animation:fadeIn .2s ease}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.tab-pane.active{display:block;opacity:1;transform:none}
 
 /* ── SHARED COMPONENTS ── */
 
@@ -737,17 +735,17 @@ footer span{color:var(--primary)}
 
 <!-- TABS -->
 <nav class="tab-nav" role="tablist">
-  <button class="tab-btn active" onclick="switchTab('dc',this)" role="tab">🖥 DC Replication<span class="tbadge hidden" id="badge-dc">0</span></button>
-  <button class="tab-btn" onclick="switchTab('ntp',this)" role="tab">⏱ NTP Monitor<span class="tbadge hidden" id="badge-ntp">0</span></button>
-  <button class="tab-btn" onclick="switchTab('dns',this)" role="tab">🌐 DNS Benchmark</button>
-  <button class="tab-btn" onclick="switchTab('logs',this)" role="tab">📋 Log Viewer<span class="tbadge hidden" id="badge-logs">0</span></button>
-  <button class="tab-btn" onclick="switchTab('gsync',this)" role="tab">☁️ Google Sync<span class="tbadge hidden" id="badge-gsync">0</span></button>
-  <button class="tab-btn" onclick="switchTab('ubuntu',this)" role="tab">🐧 Ubuntu Server</button>
-  <button class="tab-btn" onclick="switchTab('ollama',this)" role="tab">🤖 Ollama AI</button>
-  <button class="tab-btn" onclick="switchTab('pbx',this)" role="tab">📞 PBX</button>
-  <button class="tab-btn" onclick="switchTab('helpdesk',this)" role="tab">🎫 Helpdesk</button>
-  <button class="tab-btn" onclick="switchTab('winagents',this)" role="tab">💻 Windows Agents</button>
-  <button class="tab-btn btn-s" onclick="switchTab('addtab',this)" role="tab">➕ Add Monitor</button>
+  <button class="tab-btn active" onclick="switchTab('dc',this)" role="tab">🖥 AD Rep<span class="tbadge hidden" id="badge-dc">0</span></button>
+  <button class="tab-btn" onclick="switchTab('ntp',this)" role="tab">⏱ NTP<span class="tbadge hidden" id="badge-ntp">0</span></button>
+  <button class="tab-btn" onclick="switchTab('dns',this)" role="tab">🌐 DNS</button>
+  <button class="tab-btn" onclick="switchTab('logs',this)" role="tab">📋 Logs<span class="tbadge hidden" id="badge-logs">0</span></button>
+  <button class="tab-btn" onclick="switchTab('gsync',this)" role="tab">☁️ Google<span class="tbadge hidden" id="badge-gsync">0</span></button>
+  <button class="tab-btn" onclick="switchTab('ubuntu',this)" role="tab">🐧 Brain</button>
+  <button class="tab-btn" onclick="switchTab('ollama',this)" role="tab">🤖 Ollama</button>
+  <button class="tab-btn" onclick="switchTab('pbx',this)" role="tab">📞 VoIP</button>
+  <button class="tab-btn" onclick="switchTab('helpdesk',this)" role="tab">🎫 Tickets</button>
+  <button class="tab-btn" onclick="switchTab('winagents',this)" role="tab">💻 Endpoints</button>
+  <button class="tab-btn btn-s" onclick="switchTab('addtab',this)" role="tab">➕ Add</button>
 </nav>
 
 <!-- ════════════════════ TAB 1: DC REPLICATION ════════════════════ -->
