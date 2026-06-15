@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOC Operations Platform | v5.11</title>
+<title>NOC Operations Platform | v5.12</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
@@ -671,7 +671,7 @@ footer span{color:var(--primary)}
   <div class="title-row">
     <span class="logo-icon">🖥️</span>
     <h1><span class="glitch" data-text="NOC OPERATIONS PLATFORM">NOC OPERATIONS PLATFORM</span></h1>
-    <span class="ver">v5.11</span>
+    <span class="ver">v5.12</span>
   </div>
   <div class="hdr-meta">
     <span><span id="overall-dot" class="sdot"></span><span id="overall-status">All Systems OK</span></span>
@@ -746,7 +746,7 @@ footer span{color:var(--primary)}
   <button class="tab-btn" onclick="switchTab('ollama',this)" role="tab">🤖 Ollama AI</button>
   <button class="tab-btn" onclick="switchTab('pbx',this)" role="tab">📞 PBX</button>
   <button class="tab-btn" onclick="switchTab('helpdesk',this)" role="tab">🎫 Helpdesk</button>
-  <button class="tab-btn" onclick="switchTab('ssl',this)" role="tab">🔒 SSL Monitor</button>
+  <button class="tab-btn" onclick="switchTab('winagents',this)" role="tab">💻 Windows Agents</button>
   <button class="tab-btn btn-s" onclick="switchTab('addtab',this)" role="tab">➕ Add Monitor</button>
 </nav>
 
@@ -1096,7 +1096,6 @@ What would you like to know?</div>
       </div>
     </div>
   </div>
-  </div>
 <!-- ════════════════════ TAB 8: PBX / SIP ════════════════════ -->
 <div id="tab-pbx" class="tab-pane">
   <div class="ctrls">
@@ -1147,10 +1146,14 @@ What would you like to know?</div>
       <span class="ub-sub" id="pbx-uptime-since">Since --</span>
     </div>
   </div>
-  <div class="card">
-    <div class="card-hdr"><h3>PBX Call Activity (last 20 samples)</h3></div>
-    <canvas id="pbxCpuChart" width="800" height="250" style="display:block;width:100%;height:250px;"></canvas>
+
+  <div id="pbx-mobile-fallback" style="display:none;margin-top:10px">
+    <div class="card">
+      <div class="card-hdr"><h3>📞 PBX Devices</h3></div>
+      <div id="pbx-device-list" style="color:var(--dim);font-size:.8rem">No data.</div>
+    </div>
   </div>
+
   <div class="card">
     <div class="card-hdr"><h3>SIP / SNMP OID Events</h3></div>
     <div class="process-list" id="pbx-event-list"><span style="color:var(--dim)">No SNMP walk data yet.</span></div>
@@ -1159,12 +1162,68 @@ What would you like to know?</div>
     <div class="events-hdr"><h3>📡 PBX Events</h3><button class="btn-sm btn-s" onclick="clearEvents('pbx')">Clear</button></div>
     <div class="evt-feed" id="pbx-events"></div>
   </div>
-  <div id="pbx-placeholder" style="display:none; padding: 10px; color: var(--dim);">
-    <div style="font-weight:bold; margin-bottom:6px;">Placeholder PBX data</div>
-    <div>- Mitel-MX-2500-A: healthy (calls: 175)</div>
-    <div>- Mitel-MX-2500-B: degraded (calls: 40)</div>
-    <div>- Mitel-3300-C: degraded (calls: 18)</div>
+</div>
+</div>
+
+<!-- ════════════════════ TAB: WINDOWS AGENTS ════════════════════ -->
+<div id="tab-winagents" class="tab-pane">
+  <div class="crit-card" id="winagents-crit-card">
+    <div class="crit-hdr">
+      <h2>💻 WINDOWS AGENTS <small style="font-size:.7em;color:var(--dim);font-weight:400">Connected Windows endpoints</small></h2>
+      <div id="winagents-dot" class="pdot ok"></div>
+    </div>
+    <div id="winagents-details" style="font-family:var(--mono);font-size:.82rem;color:var(--dim)">Loading…</div>
   </div>
+  <div class="ctrls">
+    <button onclick="loadWinAgentsData()">🔄 Refresh</button>
+    <input type="text" id="wa-search" placeholder="🔍 Search hostname, IP, OS..." oninput="filterWinAgents()" style="flex:1;min-width:160px;max-width:280px">
+    <select id="wa-filter-status" onchange="filterWinAgents()">
+      <option value="all">All Status</option>
+      <option value="online">🟢 Online</option>
+      <option value="stale">🟡 Stale</option>
+      <option value="offline">🔴 Offline</option>
+    </select>
+    <button onclick="exportWACSV()" class="btn-s">📥 Export CSV</button>
+  </div>
+  <div class="stats-row">
+    <div class="stat s-c"><h3>Total</h3><span id="wa-total">0</span></div>
+    <div class="stat s-ok"><h3>Online</h3><span id="wa-online">0</span></div>
+    <div class="stat s-w"><h3>Stale</h3><span id="wa-stale">0</span></div>
+    <div class="stat s-e"><h3>Offline</h3><span id="wa-offline">0</span></div>
+  </div>
+  <div class="tbl-wrap">
+    <table id="wa-table">
+      <thead>
+        <tr>
+          <th onclick="sortWA(0)" style="cursor:pointer">Hostname ▲▼</th>
+          <th onclick="sortWA(1)" style="cursor:pointer">IP Address ▲▼</th>
+          <th onclick="sortWA(2)" style="cursor:pointer">OS Version ▲▼</th>
+          <th onclick="sortWA(3)" style="cursor:pointer">Agent Version ▲▼</th>
+          <th onclick="sortWA(4)" style="cursor:pointer">Status ▲▼</th>
+          <th onclick="sortWA(5)" style="cursor:pointer">Last Seen ▲▼</th>
+          <th>Tags</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="wa-tbody"><tr><td colspan="8" style="text-align:center;color:var(--dim);padding:28px">Loading agents...</td></tr></tbody>
+    </table>
+  </div>
+  <div class="charts-grid" style="margin-top:16px">
+    <div class="chart-card">
+      <h4 style="color:var(--primary);margin-bottom:8px;font-size:.8rem">Agent Status Distribution</h4>
+      <canvas id="waStatusChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <h4 style="color:var(--primary);margin-bottom:8px;font-size:.8rem">Agent Details</h4>
+      <div id="wa-details" style="min-height:200px;max-height:400px;overflow:auto;padding:8px;background:rgba(0,0,0,0.1);border-radius:6px"></div>
+    </div>
+  </div>
+  <div class="events-panel">
+    <div class="events-hdr"><h3>📜 Windows Agents Events</h3><button class="btn-sm btn-s" onclick="clearEvents('winagents')">Clear</button></div>
+    <div class="evt-feed" id="winagents-events"></div>
+  </div>
+</div>
+
 </div>
 </div>
 
@@ -1210,75 +1269,6 @@ What would you like to know?</div>
     <button class="btn-g" style="margin-top:10px" onclick="submitTicket()">📨 Submit</button>
   </div>
 </div>
-</div>
-
-<!-- ════════════════════ TAB SSL: SSL MONITOR ════════════════════ -->
-<div id="tab-ssl" class="tab-pane">
-  <div class="ctrls">
-    <button onclick="loadSSLData()">🔄 Refresh</button>
-    <button class="btn-g" onclick="openSSLAddModal()">➕ Add Website</button>
-    <input type="text" id="ssl-search" placeholder="🔍 Search websites..." oninput="filterSSLTable()" style="flex:1;max-width:280px">
-    <select id="ssl-filter-status" onchange="filterSSLTable()">
-      <option value="all">All Status</option>
-      <option value="ok">✅ Valid</option>
-      <option value="warn">⚠️ Expiring Soon (≤30d)</option>
-      <option value="crit">❌ Expired / Error</option>
-    </select>
-  </div>
-  <div class="stats-row">
-    <div class="stat s-c"><h3>Total</h3><span id="ssl-total">0</span></div>
-    <div class="stat s-ok"><h3>Valid</h3><span id="ssl-ok">0</span></div>
-    <div class="stat s-w"><h3>Expiring Soon</h3><span id="ssl-warn">0</span></div>
-    <div class="stat s-e"><h3>Expired / Error</h3><span id="ssl-crit">0</span></div>
-  </div>
-  <div class="tbl-wrap" style="max-height:480px">
-    <table id="ssl-table">
-      <thead><tr>
-        <th onclick="sortSSL(0)">Website</th>
-        <th onclick="sortSSL(1)">URL</th>
-        <th onclick="sortSSL(2)">Ping (ms)</th>
-        <th onclick="sortSSL(3)">SSL Status</th>
-        <th onclick="sortSSL(4)">Issuer</th>
-        <th onclick="sortSSL(5)">Expires</th>
-        <th onclick="sortSSL(6)">Days Left</th>
-        <th>Actions</th>
-      </tr></thead>
-      <tbody id="ssl-tbody"><tr><td colspan="8" style="text-align:center;color:var(--dim);padding:28px">No websites configured. Click "Add Website" to start monitoring SSL certificates.</td></tr></tbody>
-    </table>
-  </div>
-  <div class="charts-grid">
-    <div class="chart-card"><canvas id="sslDaysChart" height="200"></canvas></div>
-    <div class="chart-card"><canvas id="sslPingChart" height="200"></canvas></div>
-  </div>
-  <div class="events-panel">
-    <div class="events-hdr"><h3>🔒 SSL Events</h3><button class="btn-sm btn-s" onclick="clearEvents('ssl')">Clear</button></div>
-    <div class="evt-feed" id="ssl-events"></div>
-  </div>
-</div>
-
-<!-- ════════════════════ SSL ADD/EDIT MODAL ════════════════════ -->
-<div class="modal-overlay" id="ssl-modal" onclick="if(event.target===this)closeSSLModal()">
-  <div class="modal-card" style="max-width:560px">
-    <div class="modal-hdr"><h3 id="ssl-modal-title">Add Website</h3><button class="btn-sm" onclick="closeSSLModal()">✕</button></div>
-    <input type="hidden" id="ssl-edit-index">
-    <div class="form-row">
-      <div><label>Website Name</label><input type="text" id="ssl-name" placeholder="e.g. Company Portal"></div>
-    </div>
-    <div class="form-row">
-      <div><label>URL (https://...)</label><input type="url" id="ssl-url" placeholder="https://example.com" required></div>
-    </div>
-    <div class="form-row">
-      <div><label>Check Interval (minutes)</label><input type="number" id="ssl-interval" value="60" min="5" max="1440" style="width:120px"></div>
-      <div><label>Alert Threshold (days)</label><input type="number" id="ssl-threshold" value="30" min="1" max="365" style="width:120px"></div>
-    </div>
-    <div class="form-row">
-      <div><label>Tag</label><input type="text" id="ssl-tag" placeholder="Production, Staging, etc." style="width:200px"></div>
-    </div>
-    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn-s" onclick="closeSSLModal()">Cancel</button>
-      <button class="btn-g" onclick="saveSSLWebsite()">💾 Save</button>
-    </div>
-  </div>
 </div>
 
 <!-- ════════════════════ TAB 8: ADD MONITOR ════════════════════ -->
@@ -1392,7 +1382,7 @@ $output | ConvertTo-Json -Depth 3 | Out-File "C:\DC_Dashboard\ntp_status.json" -
 
 <!-- FOOTER -->
 <footer>
-  NOC Operations Platform v5.11 &nbsp;|&nbsp; Developed by <span>Jhonattan L. Jimenez</span> &nbsp;|&nbsp;
+  NOC Operations Platform v5.12 &nbsp;|&nbsp; Developed by <span>Jhonattan L. Jimenez</span> &nbsp;|&nbsp;
   <span id="footer-summary">Loading…</span>
 </footer>
 
@@ -1422,7 +1412,6 @@ const STATE = {
   ollama: { url:'http://localhost:11434', model:'llama3.2', tokens:1024 },
   pbx: { data:[], loaded:false },
   pbx_walk: { loaded:false },
-  ssl: { sites:[], loaded:false, sortCol:2, sortAsc:true },
   alerts: { email:true, tg:true, teams:true }
 };
 const DC_CRITICAL = '192.0.2.7';
@@ -1431,7 +1420,7 @@ let ubuntuChart = null;
 let ntpDriftChart = null;
 let dnsChart = null;
 let refreshTimers = {};
-const REFRESH_INTERVALS = { dc:60, ntp:60, logs:30, ubuntu:60, gsync:120, pbx:60, ssl:60 };
+const REFRESH_INTERVALS = { dc:60, ntp:60, logs:30, ubuntu:60, gsync:120, pbx:60 };
 
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 
@@ -1572,347 +1561,303 @@ function sendAlert(title, msg) {
 
 /* ════ TABS ════ */
 function switchTab(id, btn){
-  try {
-    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    const tab = document.getElementById('tab-'+id);
-    if(tab) {
-    tab.classList.add('active');
-    if (getComputedStyle(tab).opacity === '0' || getComputedStyle(tab).height === '0px') {
-      tab.style.opacity = '1';
-      tab.style.height = 'auto';
-      tab.style.overflow = 'visible';
-    }
-  }
-    if(btn) btn.classList.add('active');
-  } catch (e) {
-    console.error('switchTab failed', id, e);
-    toast('Tab switch failed','err');
-  }
-  if(id === 'pbx') {
-    const ph = document.getElementById('pbx-placeholder');
-    if (ph) ph.style.display = 'block';
-  }
-  //lazy load on first open
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  // lazy load on first open
   if(id==='ntp' && !STATE.ntp.loaded){ loadNTPData(); STATE.ntp.loaded=true; }
   if(id==='logs' && !STATE.logs.loaded){ refreshCurrentLog(); STATE.logs.loaded=true; }
   if(id==='ubuntu' && !STATE.ubuntu.loaded){ loadUbuntuData(); STATE.ubuntu.loaded=true; }
   if(id==='gsync' && !STATE.gsync_loaded){ loadGSyncData(); STATE.gsync_loaded=true; }
   if(id==='pbx' && !STATE.pbx.loaded){ loadPBXData(); loadPBXWalk(); STATE.pbx.loaded=true; }
   if(id==='helpdesk' && !STATE.helpdesk.loaded){ loadHelpdeskTickets(); STATE.helpdesk.loaded=true; }
-  if(id==='ssl' && !STATE.ssl.loaded){ loadSSLData(); STATE.ssl.loaded=true; }
 }
 
+/*
 
+/* ═════════════════════════════════ WINDOWS AGENTS ══════════════════════════════ */
 
-/* ═════════════════════════════════ SSL MONITOR ═════════════════════════════════ */
+STATE.winagents = { agents: [], loaded: false, sortCol: 0, sortAsc: true, selectedAgent: null };
 
-async function loadSSLData() {
+async function loadWinAgentsData() {
   try {
-    const r = await fetch('/api/ssl/status');
+    const r = await fetch('/api/agent/agents');
     const data = await r.json();
     if (Array.isArray(data) && data.length) {
-      STATE.ssl.sites = data.map(s => ({
-        ...s,
-        ping_ms: s.ping_ms ?? '--',
-        ssl_status: s.ssl_status ?? 'unknown',
-        issuer: s.issuer ?? '--',
-        expires: s.expires ?? '--',
-        days_left: s.days_left ?? null
-      }));
+      STATE.winagents.agents = data;
     } else {
-      // Load from localStorage demo data
-      const stored = localStorage.getItem('noc_ssl_sites');
-      if (stored) {
-        STATE.ssl.sites = JSON.parse(stored);
-      } else {
-        // Demo data
-        STATE.ssl.sites = [
-          { id: 1, name: 'Example Corp', url: 'https://example.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 45, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2026-12-31', days_left: 199 },
-          { id: 2, name: 'API Gateway', url: 'https://api.github.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 120, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2027-03-15', days_left: 273 }
-        ];
-      }
+      // Demo data
+      STATE.winagents.agents = [
+        { id: 1, agent_id: 'telegraf-SERVER01', hostname: 'SERVER01', ip_address: '192.168.1.100', os_version: 'Windows Server 2022 10.0.20348', agent_version: 'telegraf', status: 'online', last_seen: new Date().toISOString(), tags: ['fileserver', 'prod'] },
+        { id: 2, agent_id: 'agent-uuid-2', hostname: 'FILESERV-02', ip_address: '192.168.1.101', os_version: 'Windows Server 2019 10.0.17763', agent_version: '1.0.0', status: 'online', last_seen: new Date(Date.now() - 5*60000).toISOString(), tags: ['dc'] },
+        { id: 3, agent_id: 'agent-uuid-3', hostname: 'APPSERV-01', ip_address: '192.168.1.102', os_version: 'Windows Server 2022 10.0.20348', agent_version: '1.0.0', status: 'stale', last_seen: new Date(Date.now() - 2*3600000).toISOString(), tags: ['app', 'staging'] },
+        { id: 4, agent_id: 'telegraf-BACKUP01', hostname: 'BACKUP01', ip_address: '192.168.1.103', os_version: 'Windows Server 2019 10.0.17763', agent_version: 'telegraf', status: 'offline', last_seen: new Date(Date.now() - 24*3600000).toISOString(), tags: ['backup'] },
+      ];
     }
-    STATE.ssl.loaded = true;
-    renderSSLTable();
-    renderSSLCharts();
-    addEvent('ssl', 'info', '🔒', `SSL monitor loaded — ${STATE.ssl.sites.length} site(s)`);
+    STATE.winagents.loaded = true;
+    renderWATable();
+    renderWACharts();
+    addEvent('winagents', 'info', '💻', `Windows Agents loaded — ${STATE.winagents.agents.length} agent(s)`);
   } catch (e) {
-    console.error('loadSSLData failed', e);
-    loadSSLDemo();
+    console.error('loadWinAgentsData failed', e);
+    loadWADemo();
   }
 }
 
-function loadSSLDemo() {
-  STATE.ssl.sites = [
-    { id: 1, name: 'Example Corp', url: 'https://example.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 45, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2026-12-31', days_left: 199 },
-    { id: 2, name: 'API Gateway', url: 'https://api.github.com', interval: 60, threshold: 30, tag: 'Production', ping_ms: 120, ssl_status: 'valid', issuer: 'DigiCert Inc', expires: '2027-03-15', days_left: 273 },
-    { id: 3, name: 'Staging Site', url: 'https://staging.example.com', interval: 60, threshold: 30, tag: 'Staging', ping_ms: 89, ssl_status: 'warning', issuer: 'Let\'s Encrypt', expires: '2026-07-15', days_left: 14 }
+function loadWADemo() {
+  STATE.winagents.agents = [
+    { id: 1, agent_id: 'telegraf-SERVER01', hostname: 'SERVER01', ip_address: '192.168.1.100', os_version: 'Windows Server 2022 10.0.20348', agent_version: 'telegraf', status: 'online', last_seen: new Date().toISOString(), tags: ['fileserver', 'prod'] },
+    { id: 2, agent_id: 'agent-uuid-2', hostname: 'FILESERV-02', ip_address: '192.168.1.101', os_version: 'Windows Server 2019 10.0.17763', agent_version: '1.0.0', status: 'online', last_seen: new Date(Date.now() - 5*60000).toISOString(), tags: ['dc'] },
+    { id: 3, agent_id: 'agent-uuid-3', hostname: 'APPSERV-01', ip_address: '192.168.1.102', os_version: 'Windows Server 2022 10.0.20348', agent_version: '1.0.0', status: 'stale', last_seen: new Date(Date.now() - 2*3600000).toISOString(), tags: ['app', 'staging'] },
+    { id: 4, agent_id: 'telegraf-BACKUP01', hostname: 'BACKUP01', ip_address: '192.168.1.103', os_version: 'Windows Server 2019 10.0.17763', agent_version: 'telegraf', status: 'offline', last_seen: new Date(Date.now() - 24*3600000).toISOString(), tags: ['backup'] },
   ];
-  STATE.ssl.loaded = true;
-  renderSSLTable();
-  renderSSLCharts();
-  addEvent('ssl', 'warn', '⚠️', 'Using demo SSL data — configure /api/ssl/status endpoint');
+  STATE.winagents.loaded = true;
+  renderWATable();
+  renderWACharts();
+  addEvent('winagents', 'warn', '⚠️', 'Using demo Windows Agents data — configure /api/agent/agents endpoint');
 }
 
-function saveSSLData() {
-  localStorage.setItem('noc_ssl_sites', JSON.stringify(STATE.ssl.sites));
+function getWAColKey(col) {
+  const keys = ['hostname', 'ip_address', 'os_version', 'agent_version', 'status', 'last_seen'];
+  return keys[col] || 'hostname';
 }
 
-function openSSLAddModal(index = -1) {
-  const modal = document.getElementById('ssl-modal');
-  const title = document.getElementById('ssl-modal-title');
-  const editIndex = document.getElementById('ssl-edit-index');
-  
-  if (index >= 0) {
-    const site = STATE.ssl.sites[index];
-    title.textContent = 'Edit Website';
-    editIndex.value = index;
-    document.getElementById('ssl-name').value = site.name;
-    document.getElementById('ssl-url').value = site.url;
-    document.getElementById('ssl-interval').value = site.interval || 60;
-    document.getElementById('ssl-threshold').value = site.threshold || 30;
-    document.getElementById('ssl-tag').value = site.tag || '';
+function sortWA(col) {
+  if (STATE.winagents.sortCol === col) {
+    STATE.winagents.sortAsc = !STATE.winagents.sortAsc;
   } else {
-    title.textContent = 'Add Website';
-    editIndex.value = -1;
-    document.getElementById('ssl-name').value = '';
-    document.getElementById('ssl-url').value = '';
-    document.getElementById('ssl-interval').value = 60;
-    document.getElementById('ssl-threshold').value = 30;
-    document.getElementById('ssl-tag').value = '';
+    STATE.winagents.sortCol = col;
+    STATE.winagents.sortAsc = true;
   }
-  modal.classList.add('visible');
+  renderWATable();
 }
 
-function closeSSLModal() {
-  document.getElementById('ssl-modal').classList.remove('visible');
-}
+function renderWATable() {
+  const tbody = document.getElementById('wa-tbody');
+  const agents = STATE.winagents.agents || [];
 
-function saveSSLWebsite() {
-  const name = document.getElementById('ssl-name').value.trim();
-  const url = document.getElementById('ssl-url').value.trim();
-  const interval = parseInt(document.getElementById('ssl-interval').value) || 60;
-  const threshold = parseInt(document.getElementById('ssl-threshold').value) || 30;
-  const tag = document.getElementById('ssl-tag').value.trim();
-  const editIndex = parseInt(document.getElementById('ssl-edit-index').value);
-  
-  if (!name || !url) { toast('Name and URL are required','err'); return; }
-  if (!url.startsWith('http')) { toast('URL must start with http:// or https://','err'); return; }
-  
-  const siteData = { name, url, interval, threshold, tag, ping_ms: '--', ssl_status: 'pending', issuer: '--', expires: '--', days_left: null };
-  
-  if (editIndex >= 0) {
-    const oldId = STATE.ssl.sites[editIndex].id;
-    siteData.id = oldId;
-    STATE.ssl.sites[editIndex] = siteData;
-    toast(`Website "${name}" updated`,'ok',3000);
-  } else {
-    siteData.id = Date.now();
-    STATE.ssl.sites.push(siteData);
-    toast(`Website "${name}" added`,'ok',3000);
-  }
-  
-  saveSSLData();
-  renderSSLTable();
-  renderSSLCharts();
-  closeSSLModal();
-  
-  // Trigger immediate check for new/updated site
-  checkSSLWebsite(siteData);
-}
-
-function deleteSSLWebsite(index) {
-  const name = STATE.ssl.sites[index]?.name;
-  STATE.ssl.sites.splice(index, 1);
-  saveSSLData();
-  renderSSLTable();
-  renderSSLCharts();
-  toast(`Website "${name}" removed`,'warn',2500);
-}
-
-async function checkSSLWebsite(site) {
-  try {
-    const r = await fetch('/api/ssl/check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: site.url })
-    });
-    const result = await r.json();
-    
-    // Update site with results
-    site.ping_ms = result.ping_ms ?? '--';
-    site.ssl_status = result.ssl_status ?? 'error';
-    site.issuer = result.issuer ?? '--';
-    site.expires = result.expires ?? '--';
-    site.days_left = result.days_left ?? null;
-    
-    saveSSLData();
-    renderSSLTable();
-    renderSSLCharts();
-    
-    if (result.ssl_status === 'expired' || result.ssl_status === 'error') {
-      addEvent('ssl', 'err', '❌', `SSL check failed for ${site.name}: ${result.error || 'Certificate expired'}`);
-    } else if (result.ssl_status === 'warning') {
-      addEvent('ssl', 'warn', '⚠️', `SSL expiring soon for ${site.name}: ${result.days_left} days left`);
-    } else {
-      addEvent('ssl', 'ok', '✅', `SSL check OK for ${site.name} (${result.ping_ms}ms, ${result.days_left}d left)`);
-    }
-  } catch (e) {
-    site.ssl_status = 'error';
-    site.ping_ms = '--';
-    saveSSLData();
-    renderSSLTable();
-    addEvent('ssl', 'err', '❌', `SSL check error for ${site.name}: ${e.message}`);
-  }
-}
-
-function checkAllSSLWebsites() {
-  STATE.ssl.sites.forEach(site => checkSSLWebsite(site));
-}
-
-function renderSSLTable() {
-  const tbody = document.getElementById('ssl-tbody');
-  const sites = STATE.ssl.sites || [];
-  
-  if (!sites.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:28px">No websites configured. Click "Add Website" to start monitoring SSL certificates.</td></tr>';
-    updateSSLStats([]);
+  if (!agents.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:28px">No agents registered.</td></tr>';
+    updateWAStats([]);
     return;
   }
-  
-  // Sort
-  const { sortCol, sortAsc } = STATE.ssl;
-  const sorted = [...sites].sort((a, b) => {
-    let av = a[getSSLColKey(sortCol)], bv = b[getSSLColKey(sortCol)];
+
+  const { sortCol, sortAsc } = STATE.winagents;
+  const sorted = [...agents].sort((a, b) => {
+    let av = a[getWAColKey(sortCol)], bv = b[getWAColKey(sortCol)];
     if (av === null || av === undefined) av = sortAsc ? Infinity : -Infinity;
     if (bv === null || bv === undefined) bv = sortAsc ? Infinity : -Infinity;
     if (typeof av === 'string') av = av.toLowerCase();
     if (typeof bv === 'string') bv = bv.toLowerCase();
     return sortAsc ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
   });
-  
-  tbody.innerHTML = sorted.map((site, idx) => {
-    const origIdx = sites.indexOf(site);
-    const statusClass = site.ssl_status === 'valid' ? 'tag-ok' : (site.ssl_status === 'warning' ? 'tag-warn' : 'tag-err');
-    const statusIcon = site.ssl_status === 'valid' ? '✅' : (site.ssl_status === 'warning' ? '⚠️' : '❌');
-    const daysDisplay = site.days_left !== null ? `${site.days_left}d` : '--';
-    const pingDisplay = site.ping_ms !== '--' ? `${site.ping_ms}ms` : '--';
-    
+
+  tbody.innerHTML = sorted.map((agent) => {
+    const statusClass = agent.status === 'online' ? 'tag-ok' : (agent.status === 'stale' ? 'tag-warn' : 'tag-err');
+    const statusIcon = agent.status === 'online' ? '🟢' : (agent.status === 'stale' ? '🟡' : '🔴');
+    const lastSeen = agent.last_seen ? new Date(agent.last_seen).toLocaleString() : 'Never';
+    const tags = (agent.tags || []).map(t => `<span class="tag tag-info" style="font-size:.6rem;margin-right:4px">${esc(t)}</span>`).join('');
+
     return `<tr>
-      <td><strong style="color:var(--primary)">${esc(site.name)}</strong> ${site.tag ? `<span class="tag tag-info" style="margin-left:6px;font-size:.65rem">${esc(site.tag)}</span>` : ''}</td>
-      <td style="font-family:var(--mono);font-size:.75rem;color:var(--dim)">${esc(site.url)}</td>
-      <td style="font-family:var(--mono);color:${site.ping_ms !== '--' && parseInt(site.ping_ms) > 500 ? 'var(--warn)' : 'var(--text)'}">${pingDisplay}</td>
-      <td><span class="tag ${statusClass}">${statusIcon} ${esc(site.ssl_status)}</span></td>
-      <td style="font-size:.8rem;color:var(--dim)">${esc(site.issuer)}</td>
-      <td style="font-family:var(--mono);font-size:.8rem">${esc(site.expires)}</td>
-      <td style="font-family:var(--mono);font-weight:600;color:${site.days_left !== null && site.days_left <= 30 ? 'var(--err)' : (site.days_left !== null && site.days_left <= 60 ? 'var(--warn)' : 'var(--ok)')}">${daysDisplay}</td>
-      <td>
-        <button class="btn-sm" onclick="checkSSLWebsite(STATE.ssl.sites[${origIdx}])" title="Check Now">🔍</button>
-        <button class="btn-sm" onclick="openSSLAddModal(${origIdx})" title="Edit">✏️</button>
-        <button class="btn-sm btn-s" onclick="deleteSSLWebsite(${origIdx})" title="Delete">✕</button>
+      <td><strong style="color:var(--primary)">${esc(agent.hostname)}</strong></td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--dim)">${esc(agent.ip_address || '--')}</td>
+      <td style="font-family:var(--mono);font-size:.7rem;color:var(--dim);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(agent.os_version || '--')}</td>
+      <td style="font-family:var(--mono);font-size:.7rem;color:var(--info)">${esc(agent.agent_version)}</td>
+      <td><span class="tag ${statusClass}">${statusIcon} ${esc(agent.status)}</span></td>
+      <td style="font-family:var(--mono);font-size:.75rem;color:var(--dim)">${esc(lastSeen)}</td>
+      <td>${tags || '<span style="color:var(--dim)">--</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-sm" onclick="showAgentDetails(${agent.id})" title="View Details">👁</button>
       </td>
     </tr>`;
   }).join('');
-  
-  updateSSLStats(sites);
+
+  updateWAStats(agents);
 }
 
-function getSSLColKey(col) {
-  const keys = ['name', 'url', 'ping_ms', 'ssl_status', 'issuer', 'expires', 'days_left'];
-  return keys[col] || 'name';
+function updateWAStats(agents) {
+  const total = agents.length;
+  const online = agents.filter(a => a.status === 'online').length;
+  const stale = agents.filter(a => a.status === 'stale').length;
+  const offline = agents.filter(a => a.status === 'offline').length;
+
+  document.getElementById('wa-total').textContent = total;
+  document.getElementById('wa-online').textContent = online;
+  document.getElementById('wa-stale').textContent = stale;
+  document.getElementById('wa-offline').textContent = offline;
 }
 
-function sortSSL(col) {
-  if (STATE.ssl.sortCol === col) {
-    STATE.ssl.sortAsc = !STATE.ssl.sortAsc;
-  } else {
-    STATE.ssl.sortCol = col;
-    STATE.ssl.sortAsc = true;
-  }
-  renderSSLTable();
-}
+function filterWinAgents() {
+  const search = document.getElementById('wa-search').value.toLowerCase();
+  const status = document.getElementById('wa-filter-status').value;
+  const rows = document.querySelectorAll('#wa-tbody tr');
 
-function updateSSLStats(sites) {
-  const total = sites.length;
-  const ok = sites.filter(s => s.ssl_status === 'valid').length;
-  const warn = sites.filter(s => s.ssl_status === 'warning').length;
-  const crit = sites.filter(s => s.ssl_status === 'expired' || s.ssl_status === 'error').length;
-  
-  const elTotal = document.getElementById('ssl-total');
-  const elOk = document.getElementById('ssl-ok');
-  const elWarn = document.getElementById('ssl-warn');
-  const elCrit = document.getElementById('ssl-crit');
-  
-  if (elTotal) elTotal.textContent = total;
-  if (elOk) elOk.textContent = ok;
-  if (elWarn) elWarn.textContent = warn;
-  if (elCrit) elCrit.textContent = crit;
-}
-
-function renderSSLCharts() {
-  const sites = STATE.ssl.sites || [];
-  if (!sites.length) return;
-  
-  // Days Left Chart (horizontal bar)
-  const daysCanvas = document.getElementById('sslDaysChart');
-  if (daysCanvas) {
-    const sorted = [...sites].sort((a,b) => (a.days_left ?? 9999) - (b.days_left ?? 9999)).slice(0, 10);
-    const labels = sorted.map(s => s.name);
-    const data = sorted.map(s => s.days_left ?? 0);
-    const colors = sorted.map(s => s.days_left !== null && s.days_left <= 30 ? '#ff3860' : (s.days_left !== null && s.days_left <= 60 ? '#ffcc00' : '#00ff9d'));
-    
-    destroyChart(window.sslDaysChart);
-    const ctx = daysCanvas.getContext('2d');
-    window.sslDaysChart = new Chart(ctx, {
-      type: 'bar',
-      indexAxis: 'y',
-      data: { labels, datasets: [{ label: 'Days Until Expiry', data, backgroundColor: colors, borderWidth: 0 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false, labels: { color: '#e0e0ff' } } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,243,255,0.1)' }, ticks: { color: 'rgba(224,224,255,0.7)' } }, y: { grid: { display: false }, ticks: { color: 'rgba(224,224,255,0.7)' } } } }
-    });
-  }
-  
-  // Ping Chart
-  const pingCanvas = document.getElementById('sslPingChart');
-  if (pingCanvas) {
-    const validSites = sites.filter(s => s.ping_ms !== '--' && typeof s.ping_ms === 'number').slice(0, 10);
-    if (validSites.length) {
-      const labels = validSites.map(s => s.name);
-      const data = validSites.map(s => parseInt(s.ping_ms) || 0);
-      
-      destroyChart(window.sslPingChart);
-      const ctx = pingCanvas.getContext('2d');
-      window.sslPingChart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Ping (ms)', data, backgroundColor: '#00f3ff', borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false, labels: { color: '#e0e0ff' } } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,243,255,0.1)' }, ticks: { color: 'rgba(224,224,255,0.7)' } }, x: { grid: { display: false }, ticks: { color: 'rgba(224,224,255,0.7)' } } } }
-      });
-    }
-  }
-}
-
-function filterSSLTable() {
-  const search = document.getElementById('ssl-search')?.value.toLowerCase() || '';
-  const status = document.getElementById('ssl-filter-status')?.value || 'all';
-  const rows = document.querySelectorAll('#ssl-tbody tr');
-  
   rows.forEach(row => {
-    const cells = row.cells;
-    if (cells.length < 8) return;
-    const name = cells[0].textContent.toLowerCase();
-    const url = cells[1].textContent.toLowerCase();
-    const sslStatus = cells[3].textContent.toLowerCase();
-    
-    const matchesSearch = name.includes(search) || url.includes(search);
-    const matchesStatus = status === 'all' || 
-      (status === 'ok' && sslStatus.includes('valid')) ||
-      (status === 'warn' && (sslStatus.includes('warning') || sslStatus.includes('warn'))) ||
-      (status === 'crit' && (sslStatus.includes('expired') || sslStatus.includes('error')));
-    
+    const cells = row.querySelectorAll('td');
+    if (!cells.length) return;
+    const hostname = cells[0].textContent.toLowerCase();
+    const ip = cells[1].textContent.toLowerCase();
+    const os = cells[2].textContent.toLowerCase();
+    const agentStatus = cells[4].textContent.toLowerCase();
+
+    const matchesSearch = hostname.includes(search) || ip.includes(search) || os.includes(search);
+    const matchesStatus = status === 'all' || agentStatus.includes(status);
+
     row.style.display = matchesSearch && matchesStatus ? '' : 'none';
   });
 }
 
+async function showAgentDetails(agentId) {
+  const agent = STATE.winagents.agents.find(a => a.id === agentId);
+  if (!agent) return;
+
+  STATE.winagents.selectedAgent = agent;
+  const details = document.getElementById('wa-details');
+
+  // Show loading
+  details.innerHTML = '<div style="text-align:center;color:var(--dim);padding:20px">Loading details…</div>';
+
+  try {
+    const [servicesRes, eventsRes, logsRes] = await Promise.all([
+      fetch(`/api/agent/agents/${agentId}/services?limit=50`),
+      fetch(`/api/agent/agents/${agentId}/events?limit=100&hours=24`),
+      fetch(`/api/agent/agents/${agentId}/logs?limit=50&hours=24`)
+    ]);
+
+    const services = await servicesRes.json().catch(() => []);
+    const events = await eventsRes.json().catch(() => []);
+    const logs = await logsRes.json().catch(() => []);
+
+    renderAgentDetails(agent, services, events, logs);
+  } catch (e) {
+    details.innerHTML = `<div style="color:var(--err);text-align:center;padding:20px">Failed to load details: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderAgentDetails(agent, services, events, logs) {
+  const details = document.getElementById('wa-details');
+
+  let html = `
+    <div style="margin-bottom:16px;padding:12px;background:rgba(0,243,255,0.05);border:1px solid var(--border);border-radius:8px">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:.75rem">
+        <div><strong style="color:var(--primary)">${esc(agent.hostname)}</strong></div>
+        <div>IP: ${esc(agent.ip_address || '--')}</div>
+        <div>OS: ${esc(agent.os_version || '--')}</div>
+        <div>Agent: ${esc(agent.agent_version)}</div>
+        <div>Status: <span class="tag ${agent.status==='online'?'tag-ok':(agent.status==='stale'?'tag-warn':'tag-err')}">${esc(agent.status)}</span></div>
+        <div>Last Seen: ${esc(agent.last_seen ? new Date(agent.last_seen).toLocaleString() : 'Never')}</div>
+        <div>Tags: ${(agent.tags || []).map(t => `<span class="tag tag-info" style="font-size:.6rem">${esc(t)}</span>`).join(' ') || '<span style="color:var(--dim)">--</span>'}</div>
+      </div>
+    </div>
+  `;
+
+  // Services
+  if (services.length) {
+    html += `
+      <div style="margin-bottom:16px">
+        <h4 style="color:var(--primary);margin-bottom:8px;font-size:.85rem">⚙️ Services (${services.length})</h4>
+        <div style="max-height:200px;overflow:auto;font-family:var(--mono);font-size:.68rem">
+          ${services.map(s => `
+            <div style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;gap:12px;align-items:center">
+              <span style="color:var(--primary);min-width:180px">${esc(s.service_name)}</span>
+              <span class="tag ${s.status==='running'?'tag-ok':'tag-warn'}" style="font-size:.6rem">${esc(s.status)}</span>
+              <span style="color:var(--dim)">${esc(s.display_name || '')}</span>
+              <span style="color:var(--dim);font-size:.6rem">PID: ${s.pid || '--'} | CPU: ${s.cpu_percent !== null && s.cpu_percent !== undefined ? s.cpu_percent.toFixed(1) : '--'}% | RAM: ${s.memory_mb || '--'}MB</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Events
+  if (events.length) {
+    html += `
+      <div style="margin-bottom:16px">
+        <h4 style="color:var(--warn);margin-bottom:8px;font-size:.85rem">📋 Events (last 24h, ${events.length})</h4>
+        <div style="max-height:200px;overflow:auto;font-family:var(--mono);font-size:.65rem">
+          ${events.slice(0, 50).map(e => `
+            <div style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.03);line-height:1.5">
+              <span class="tag ${e.level==='ERROR'?'tag-err':(e.level==='WARNING'?'tag-warn':'tag-ok')}" style="font-size:.55rem">${esc(e.level)}</span>
+              <span style="color:var(--info);margin-left:6px">${esc(e.source)}</span>
+              <span style="color:var(--dim)">[${esc(e.channel)}]</span>
+              <div style="color:var(--text);margin-top:2px;margin-left:68px">${esc(e.message.substring(0, 200))}${e.message.length > 200 ? '…' : ''}</div>
+              <div style="color:var(--dim);font-size:.6rem;margin-left:68px">${esc(e.recorded_at)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Logs
+  if (logs.length) {
+    html += `
+      <div style="margin-bottom:16px">
+        <h4 style="color:var(--info);margin-bottom:8px;font-size:.85rem">📄 Logs (last 24h, ${logs.length})</h4>
+        <div style="max-height:200px;overflow:auto;font-family:var(--mono);font-size:.65rem">
+          ${logs.slice(0, 30).map(l => `
+            <div style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.03);line-height:1.5">
+              <span class="tag ${l.level==='ERROR'?'tag-err':(l.level==='WARNING'?'tag-warn':'tag-ok')}" style="font-size:.55rem">${esc(l.level || 'INFO')}</span>
+              <span style="color:var(--info);margin-left:6px">${esc(l.log_source)}</span>
+              <div style="color:var(--text);margin-top:2px;margin-left:68px">${esc(l.message.substring(0, 200))}${l.message.length > 200 ? '…' : ''}</div>
+              <div style="color:var(--dim);font-size:.6rem;margin-left:68px">${esc(l.timestamp)} ${l.file_path ? '| ' + esc(l.file_path) : ''}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  if (!services.length && !events.length && !logs.length) {
+    html += `
+      <div style="text-align:center;color:var(--dim);padding:40px">
+        No data available for this agent yet.<br>
+        <span style="font-size:.75rem">Make sure the agent is pushing data to /api/agent/push</span>
+      </div>
+    `;
+  }
+
+  details.innerHTML = html;
+}
+
+function clearWinAgentDetails() {
+  document.getElementById('wa-details').innerHTML = '';
+  STATE.winagents.selectedAgent = null;
+}
+
+// Charts
+function renderWACharts() {
+  const agents = STATE.winagents.agents || [];
+  if (!agents.length) return;
+
+  // Status distribution chart
+  const statusCounts = { online: 0, offline: 0, stale: 0, unknown: 0 };
+  agents.forEach(a => { statusCounts[a.status] = (statusCounts[a.status] || 0) + 1; });
+
+  try {
+    destroyChart(window.waStatusChart);
+    const ctx = document.getElementById('waStatusChart').getContext('2d');
+    window.waStatusChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Online', 'Stale', 'Offline'],
+        datasets: [{
+          data: [statusCounts.online, statusCounts.stale, statusCounts.offline],
+          backgroundColor: ['var(--ok)', 'var(--warn)', 'var(--err)'],
+          borderWidth: 0
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: 'var(--text)', font: { size: 10 } } } } }
+    });
+  } catch (e) { console.warn('waStatusChart failed', e); }
+}
+
+function destroyChart(chart) {
+  if (chart) { chart.destroy();   if(id==='winagents' && !STATE.winagents.loaded){ loadWinAgentsData(); STATE.winagents.loaded=true; }
+}
+}
 
 
 /* ════ HELPDESK ════ */
@@ -1923,52 +1868,20 @@ async function loadPBXData() {
     const r = await fetch('/api/pbx/status');
     const data = await r.json();
     if (!Array.isArray(data) || !data.length) { toast('No PBX data','warn'); return; }
-    // Transform backend data to frontend format
-    const transformed = data.map(item => ({
-      host: item.host,
-      name: item.name,
-      model: item.model,
-      status: item.status,
-      uptime_pct: item.uptime_pct,
-      active_calls: item.active_calls,
-      // Derive/estimate missing fields from available data
-      cpu: Math.min(95, Math.max(10, 100 - (item.uptime_pct || 99) + Math.random() * 20)),
-      memory: Math.min(90, Math.max(20, 50 + Math.random() * 30)),
-      disk: Math.min(85, Math.max(15, 30 + Math.random() * 40)),
-      registrations: Math.floor((item.active_calls || 0) * 1.8),
-      trunks_active: Math.min(24, Math.max(1, Math.floor((item.active_calls || 0) / 8))),
-      trunks_total: 24,
-      cpu_cores: 8,
-      cpu_mhz: 2400,
-      ram_used: Math.floor(16 * (Math.random() * 0.4 + 0.3)),
-      ram_total: 32,
-      disk_used: Math.floor(200 * (Math.random() * 0.4 + 0.2)),
-      disk_total: 500,
-      uptime_since: new Date(Date.now() - (item.uptime_pct || 99) / 100 * 30 * 24 * 60 * 60 * 1000).toLocaleDateString()
-    }));
-    STATE.pbx.data = transformed;
+    STATE.pbx.data = data;
     STATE.pbx.loaded = true;
-    renderPBXMetrics(transformed[0]);
-    markPBXMobileFallback(transformed);
-    try { renderPBXChart(transformed); }
-    catch (_) { markPBXMobileFallback(transformed); }
-    try {
-      if (!STATE.pbx.device_list_rendered) {
-        markPBXMobileFallback(transformed);
-        STATE.pbx.device_list_rendered = true;
-      }
-    } catch (_) {}
-    addEvent('pbx','info','📞',`PBX status refreshed — ${transformed.length} device(s)`);
-  } catch (e) { loadPBXDemo(); }
+    renderPBXMetrics(data[0]);
+    try { renderPBXChart(data); }
+    catch (_) { markPBXMobileFallback(); }
+    addEvent('pbx','info','📞',`PBX status refreshed — ${data.length} device(s)`);
+  } catch (e) {
+    loadPBXDemo();
+  }
 }
-function markPBXMobileFallback(items) {
+
+function markPBXMobileFallback() {
   const el = document.getElementById('pbx-mobile-fallback');
   if (el) el.style.display = 'block';
-  const list = document.getElementById('pbx-device-list');
-  if (!list) return;
-  const data = items || STATE.pbx.data || [];
-  if (!data.length) { list.innerHTML = '<span style="color:var(--dim)">No data.</span>'; return; }
-  list.innerHTML = data.map(it => `<div style="padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.04);line-height:1.6"><span style="color:var(--primary)">${esc(it.name||it.host)}</span> <span style="color:var(--dim)">${esc(it.model||'')}</span> <span class="tag ${it.status==='healthy'?'tag-ok':'tag-warn'}">${esc(it.status||'--')}</span> <span style="color:var(--text)">calls=${esc(String(it.active_calls ?? '--'))}</span></div>`).join('');
 }
 
 function renderPBXMetrics(item){
@@ -1991,79 +1904,20 @@ function renderPBXMetrics(item){
 function renderPBXChart(data){
   const labels = data.map(d => d.name || d.host);
   const calls = data.map(d => d.active_calls || 0);
-  const canvas = document.getElementById('pbxCpuChart');
-  const container = canvas?.parentElement;
-  
-  // Force reflow and ensure layout is computed before creating chart
-  const tabPane = document.getElementById('tab-pbx');
-  if (tabPane) {
-    tabPane.offsetHeight;
-    if (container) {
-      container.style.minHeight = '250px';
-      container.offsetHeight;
-    }
-  }
-  
-  setTimeout(() => {
-    // Use canvas's current width if set, otherwise fallback
-    const w = canvas.width || (container && container.clientWidth > 0 ? container.clientWidth : 800);
-    if (!canvas.width) canvas.width = w;
-    if (!canvas.style.width) canvas.style.width = w + 'px';
-    canvas.height = 250;
-    canvas.style.height = '250px';
-    // Also constrain container height to prevent excessive growth
-    if (container) {
-      container.style.maxHeight = '280px';
-      container.style.overflow = 'hidden';
-    }
-    destroyChart(window.pbxCpuChart);
-    const ctx = canvas.getContext('2d');
-    window.pbxCpuChart = new Chart(ctx, {
-      type: 'bar',
-      data: { labels, datasets: [{ label: 'Active Calls', data: calls, backgroundColor: '#00f3ff', borderColor: '#00f3ff', borderWidth: 0 }] },
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        plugins: { 
-          legend: { display: false, labels: { color: '#e0e0ff' } } 
-        }, 
-        scales: { 
-          y: { 
-            beginAtZero: true, 
-            grid: { color: 'rgba(0,243,255,0.1)' }, 
-            ticks: { color: 'rgba(224,224,255,0.7)' } 
-          }, 
-          x: { 
-            grid: { display: false }, 
-            ticks: { color: 'rgba(224,224,255,0.7)' } 
-          } 
-        } 
-      }
-    });
-  }, 100);
+  destroyChart(window.pbxCpuChart);
+  window.pbxCpuChart = new Chart(document.getElementById('pbxCpuChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Active Calls', data: calls, backgroundColor: 'var(--primary)' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
 }
 
 async function loadPBXWalk(){
   try {
     const r = await fetch('/api/pbx/snmp/walk');
     const data = await r.json();
-    // Transform backend format {host: {oid: value}} to entries array
-    const entries = [];
-    for (const [host, oids] of Object.entries(data)) {
-      for (const [oid, value] of Object.entries(oids)) {
-        if (Array.isArray(value)) {
-          value.forEach((v, i) => entries.push({
-            host, oid: oid + '[' + i + ']', value: v, status: 'ok', timestamp: new Date().toLocaleTimeString()
-          }));
-        } else {
-          entries.push({
-            host, oid, value, status: 'ok', timestamp: new Date().toLocaleTimeString()
-          });
-        }
-      }
-    }
-    renderPBXWalk(entries);
-    addEvent('pbx','info','📡','SNMP walk loaded — ' + entries.length + ' entries');
+    renderPBXWalk(data.entries || []);
+    addEvent('pbx','info','📡','SNMP walk loaded — ' + ((data.entries||[]).length) + ' entries');
   } catch (e) {
     toast('SNMP walk failed','err');
   }
@@ -2076,7 +1930,7 @@ function renderPBXWalk(entries){
   el.innerHTML = entries.map(e => `<div style="padding:6px 2px;border-bottom:1px solid rgba(255,255,255,0.03);line-height:1.6;font-size:.72rem">
     <span style="color:var(--primary)">${esc(e.host)}</span> &nbsp;
     <span style="color:var(--dim)">${esc(e.oid || '')}</span> &nbsp;
-    <span style="color:var(--text)">${esc(e.description || e.oid || '')}</span> &nbsp;
+    <span style="color:var(--text)">${esc(e.description || '')}</span> &nbsp;
     <span class="tag ${e.status==='ok'?'tag-ok':'tag-warn'}">${esc(e.status || '')}</span><br>
     <span style="color:var(--dim)">value=${esc(String(e.value))} ${esc(e.unit||'')}</span> &nbsp;
     <span style="color:var(--dim)">${esc(e.timestamp)}</span>
@@ -2121,7 +1975,7 @@ function submitTicket(){
   fetch('/api/helpdesk/tickets',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(r=>r.json()).then(data=>{ toast('Ticket created','ok'); document.getElementById('helpdesk-create').style.display='none'; loadHelpdeskTickets(); }).catch(()=> toast('Create failed','warn'));
 }
 /* ════ EVENTS / FEED ════ */
-const allEvents = { dc:[], ntp:[], logs:[], gsync:[], ubuntu:[], pbx:[] };
+const allEvents = { dc:[], ntp:[], logs:[], gsync:[], ubuntu:[], pbx:[], winagents:[] };
 function addEvent(feed, level, icon, msg){
   const time = new Date().toLocaleTimeString();
   allEvents[feed].unshift({level,icon,time,msg});
@@ -2299,6 +2153,21 @@ function exportDCCSV(){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));
   a.download=`dc_status_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('CSV exported','ok',2000);
+}
+
+function exportWACSV(){
+  const hdr=['Hostname','IP Address','OS Version','Agent Version','Status','Last Seen','Tags'];
+  const rows=[hdr];
+  document.querySelectorAll('#wa-tbody tr').forEach(row=>{
+    if(row.style.display==='none') return;
+    rows.push(Array.from(row.querySelectorAll('td')).slice(0,7).map(td=>`"${td.textContent.replace(/,/g,';')}"`));
+  });
+  const csv=rows.map(r=>r.join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv'}));
+  a.download=`winagents_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   toast('CSV exported','ok',2000);
 }
@@ -3132,8 +3001,6 @@ function initRefreshTimers(){
   setInterval(()=>{ if(STATE.gsync_loaded) loadGSyncData(); }, REFRESH_INTERVALS.gsync*1000);
   // PBX: every 60s (only if tab was opened)
   setInterval(()=>{ if(STATE.pbx.loaded) loadPBXData(); }, REFRESH_INTERVALS.pbx*1000);
-  // SSL: every 60s (only if tab was opened)
-  setInterval(()=>{ if(STATE.ssl.loaded) checkAllSSLWebsites(); }, REFRESH_INTERVALS.ssl*1000);
 }
 
 function loadSavedConfig(){
@@ -3164,7 +3031,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Start NTP clock
   updateNTPClock();
   // Initial events
-  addGlobalEvent('info','🚀','NOC Operations Platform v5.11 initialized');
+  addGlobalEvent('info','🚀','NOC Operations Platform v5.12 initialized');
 });
 </script>
 </body>

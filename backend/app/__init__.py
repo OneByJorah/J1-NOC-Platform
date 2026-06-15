@@ -1,3 +1,1 @@
-from .main import create_app
-
-__all__ = ["create_app"]
+# J1 NOC Platform - App Package
