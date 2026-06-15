@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 
 from .config import get_settings
 from .database import engine, Base
-from .routers import health, auth, dashboard, notifications, tools, ai, static_data, pbx, agent
-
+from . import routers as _routers
+from .routers import health, auth, dashboard, notifications, tools, ai, static_data, agent, osticket as helpdesk
 settings = get_settings()
 
 
@@ -56,8 +56,8 @@ def create_app() -> FastAPI:
     app.include_router(notifications.router, prefix="/api")
     app.include_router(tools.router, prefix="/api")
     app.include_router(ai.router, prefix="/api")
-    app.include_router(pbx.router, prefix="/api")
     app.include_router(agent.router, prefix="/api")
+    app.include_router(helpdesk.router, prefix="/api")
 
     return app
 
