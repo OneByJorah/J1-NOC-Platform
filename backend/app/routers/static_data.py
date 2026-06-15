@@ -67,110 +67,53 @@ async def generate(request: Request):
 @router.get('/gcds-sample.log', include_in_schema=False)
 @router.get('/dc_replication_monitor.txt', include_in_schema=False)
 def serve_logs():
-    # Tiny text/plain response so the frontend doesn't fail fetch() casing
     return PlainTextResponse('log placeholder')
 
 
-# Simulated PBX / Mitel SNMP endpoints for dashboard demo
-PBX_HOSTS = [
-    {"host": "10.0.1.12", "name": "Mitel-MX-2500-A", "model": "MX 2500"},
-    {"host": "10.0.2.45", "name": "Mitel-MX-2500-B", "model": "MX 2500"},
-    {"host": "10.0.3.12", "name": "Mitel-3300-C", "model": "3300"},
-]
-
-PBX_STATUSES = ["healthy", "healthy", "healthy", "degraded", "critical"]
-
-
-def _pick_status(seed: str):
-    idx = sum(ord(c) for c in seed) % len(PBX_STATUSES)
-    return PBX_STATUSES[idx]
-
+# ── PBX / Mitel SNMP endpoints ──────────────────────────────────────────────
 
 @router.get('/pbx/status')
 def pbx_status():
-    import random
-    random.seed(42)
-    data = []
-    for host in PBX_HOSTS:
-        status = _pick_status(host["host"])
-        is_healthy = status == "healthy"
-        is_degraded = status == "degraded"
-        uptime = 99.2 if is_healthy else (87.5 if is_degraded else 62.1)
-        cpu = random.randint(15, 45) if is_healthy else random.randint(45, 75)
-        memory = random.randint(30, 60) if is_healthy else random.randint(60, 85)
-        disk = random.randint(20, 50) if is_healthy else random.randint(50, 80)
-        active_calls = random.randint(12, 220)
-        registrations = random.randint(80, 150)
-        trunks_total = random.randint(8, 16)
-        trunks_active = trunks_total - (0 if is_healthy else random.randint(1, 3))
-        data.append({
-            "host": host["host"],
-            "name": host["name"],
-            "model": host["model"],
-            "status": status,
-            "uptime_pct": uptime,
-            "uptime_since": "2026-06-01T00:00:00Z",
-            "cpu": cpu,
-            "cpu_cores": 4,
-            "cpu_mhz": 2400,
-            "memory": memory,
-            "ram_used": round(random.uniform(2.0, 6.0), 1),
-            "ram_total": 8.0,
-            "disk": disk,
-            "disk_used": round(random.uniform(50.0, 200.0), 1),
-            "disk_total": 500.0,
-            "active_calls": active_calls,
-            "registrations": registrations,
-            "trunks_active": trunks_active,
-            "trunks_total": trunks_total,
-        })
-    return JSONResponse(data)
+    return JSONResponse([
+        {
+            "host": "10.0.1.12", "name": "Mitel-MX-2500-A", "model": "MX 2500",
+            "status": "healthy", "uptime_pct": 99.2, "uptime_since": "2026-06-01T00:00:00Z",
+            "cpu": 35, "cpu_cores": 4, "cpu_mhz": 2400,
+            "memory": 33, "ram_used": 2.9, "ram_total": 8.0,
+            "disk": 20, "disk_used": 160.5, "disk_total": 500.0,
+            "active_calls": 201, "registrations": 115,
+            "trunks_active": 11, "trunks_total": 11,
+        },
+        {
+            "host": "10.0.2.45", "name": "Mitel-MX-2500-B", "model": "MX 2500",
+            "status": "degraded", "uptime_pct": 87.5, "uptime_since": "2026-06-01T00:00:00Z",
+            "cpu": 66, "cpu_cores": 4, "cpu_mhz": 2400,
+            "memory": 83, "ram_used": 2.1, "ram_total": 8.0,
+            "disk": 78, "disk_used": 82.8, "disk_total": 500.0,
+            "active_calls": 151, "registrations": 91,
+            "trunks_active": 13, "trunks_total": 14,
+        },
+        {
+            "host": "10.0.3.12", "name": "Mitel-3300-C", "model": "3300",
+            "status": "degraded", "uptime_pct": 87.5, "uptime_since": "2026-06-01T00:00:00Z",
+            "cpu": 61, "cpu_cores": 4, "cpu_mhz": 2400,
+            "memory": 79, "ram_used": 2.9, "ram_total": 8.0,
+            "disk": 50, "disk_used": 138.4, "disk_total": 500.0,
+            "active_calls": 155, "registrations": 105,
+            "trunks_active": 14, "trunks_total": 16,
+        },
+    ])
 
 
 @router.get('/pbx/snmp/walk')
 def pbx_snmp_walk():
-    host = "10.0.1.12"
-    return JSONResponse({
-  host: {
-   "sysDescr": "Mitel MX 2500",
-   "sysUpTime": 1234567,
-   "ifNumber": 6,
-   "ifDescr": ["eth0", "eth1", "ppp0", "vlan10", "vlan20", "vlan99"],
-   "ifOperStatus": [1, 1, 2, 1, 1, 2],
-   "ifInOctets": [123456789, 987654321, 0, 456789123, 321654987, 0],
-   "ifOutOctets": [987654321, 123456789, 0, 321654987, 456789123, 0],
-   "ssosID": ["101", "102", "103", "104", "105", "106"],
-   "ssosTrying": [0, 0, 1, 0, 0, 1],
-   "ssosActive": [45, 120, 0, 80, 210, 0],
-   "snmpEnableAuthenTraps": 1,
-   "snmpInPkts": 54321,
-   "snmpOutPkts": 54319,
-   "snmpInBadVersions": 0,
-   "snmpInBadCommunityNames": 0,
-   "snmpInBadUses": 0,
-   "snmpInASNParseErrs": 0,
-   "snmpSilentDrops": 0,
-   "snmpProxyDrops": 0,
-   "snmpTrapOID": ["1.3.6.1.6.3.1.1.4.1.0", "1.3.6.1.6.3.1.1.4.1.0"],
-   "snmpTrapEnterprises": [".1.3.6.1.4.1.1066", ".1.3.6.1.4.1.1066"],
-   "snmpTrapGeneric": ["coldStart", "authenticationFailure"],
-   "snmpTrapSpecific": [0, 0],
-   "snmpTrapTimeStamp": [0, 0],
-   "snmpTrapVarBinds": [
-    ["1.3.6.1.2.1.1.3.0", "0:0:00:05.00"],
-    ["1.3.6.1.2.1.1.3.0", "0:0:00:12.00"]
-   ],
-   "snmpTrapCommunity": ["public", "public"],
-   "snmpTrapSource": ["10.0.1.12", "10.0.1.12"],
-   "snmpTrapDest": ["10.0.1.100", "10.0.1.100"],
-   "snmpTrapEngineId": ["80:00:77:06:01:02:03:04:05", "80:00:77:06:01:02:03:04:05"],
-   "snmpTrapUserName": ["", ""],
-   "snmpTrapContextName": ["", ""],
-   "snmpTrapContextEngineId": ["", ""],
-   "snmpTrapAuthentication": [0, 0],
-   "snmpTrapPrivacy": [0, 0],
-   "snmpTrapAuthSalt": ["", ""],
-   "snmpTrapPrivSalt": ["", ""],
-   "snmpTrapReport": ["", ""]
-  }
- })
+    return JSONResponse({"entries": [
+        {"host": "10.0.1.12", "oid": "1.3.6.1.2.1.1.3.0", "description": "sysUpTime",
+         "value": "1234567", "unit": "centiseconds", "timestamp": "2026-06-14 12:40:00", "status": "ok"},
+        {"host": "10.0.1.12", "oid": "1.3.6.1.4.1.1066.1.1.1", "description": "mitelCallActive",
+         "value": "201", "unit": "calls", "timestamp": "2026-06-14 12:40:00", "status": "ok"},
+        {"host": "10.0.2.45", "oid": "1.3.6.1.4.1.1066.1.1.2", "description": "mitelTrunkStatus",
+         "value": "1 of 2 trunks down", "unit": "", "timestamp": "2026-06-14 12:39:55", "status": "warn"},
+        {"host": "10.0.3.12", "oid": "1.3.6.1.4.1.1066.1.1.3", "description": "mitelRegFailures",
+         "value": "3", "unit": "events", "timestamp": "2026-06-14 12:39:50", "status": "warn"},
+    ]})

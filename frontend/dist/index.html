@@ -1094,6 +1094,7 @@ What would you like to know?</div>
       </div>
     </div>
   </div>
+</div><!-- /tab-ollama -->
 <!-- ════════════════════ TAB 8: PBX / SIP ════════════════════ -->
 <div id="tab-pbx" class="tab-pane">
   <div class="ctrls">
@@ -1559,9 +1560,10 @@ function sendAlert(title, msg) {
 
 /* ════ TABS ════ */
 function switchTab(id, btn){
+  const activeId = id === 'voip' ? 'pbx' : id;
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('tab-'+activeId).classList.add('active');
   if(btn) btn.classList.add('active');
   // lazy load on first open
   if(id==='ntp' && !STATE.ntp.loaded){ loadNTPData(); STATE.ntp.loaded=true; }
@@ -1853,8 +1855,8 @@ function renderWACharts() {
 }
 
 function destroyChart(chart) {
-  if (chart) { chart.destroy();   if(id==='winagents' && !STATE.winagents.loaded){ loadWinAgentsData(); STATE.winagents.loaded=true; }
-}
+  if (chart) { chart.destroy(); }
+  return null;
 }
 
 
@@ -1902,8 +1904,8 @@ function renderPBXMetrics(item){
 function renderPBXChart(data){
   const labels = data.map(d => d.name || d.host);
   const calls = data.map(d => d.active_calls || 0);
-  destroyChart(window.pbxCpuChart);
-  window.pbxCpuChart = new Chart(document.getElementById('pbxCpuChart').getContext('2d'), {
+  destroyChart(window.pbxStatusChart);
+  window.pbxStatusChart = new Chart(document.getElementById('pbxStatusChart').getContext('2d'), {
     type: 'bar',
     data: { labels, datasets: [{ label: 'Active Calls', data: calls, backgroundColor: 'var(--primary)' }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
