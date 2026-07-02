@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Body
+from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
 from ..database import SessionLocal
@@ -15,7 +14,9 @@ router = APIRouter()
 
 settings = get_settings()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
+
+pwd_context = bcrypt
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 ALGORITHM = "HS256"
@@ -43,11 +44,16 @@ class UserOut(BaseModel):
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+def verify_password(plain: str, hashed: Optional[str]) -> bool:
+    if not hashed:
+        return False
+    try:
+        return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
+    except ValueError:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -91,14 +97,22 @@ def require_roles(*roles: str):
     return checker
 
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
 @router.post("/auth/login", response_model=Token)
-def login(form: OAuth2PasswordRequestForm = Depends()):
+async def login(payload: LoginRequest):
+    username = str(payload.username)
+    password = str(payload.password)
+
     db = SessionLocal()
     try:
-        user = db.query(User).filter(User.username == form.username).first()
-        if not user or not verify_password(form.password, user.hashed_password or ""):
+        user = db.query(User).filter(User.username == username).first()
+        if user is None or not verify_password(password, str(user.hashed_password) if user.hashed_password is not None else ""):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        token = create_access_token({"sub": user.username or "", "scopes": [user.role.name]})
+        token = create_access_token({"sub": user.username or username, "scopes": [user.role.name]})
         return Token(access_token=token, token_type="bearer")
     finally:
         db.close()

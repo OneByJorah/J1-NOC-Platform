@@ -1,7 +1,10 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const tabs = [
+type TabItem = { to: string; label: string };
+
+const FALLBACK_TABS: TabItem[] = [
   { to: '/', label: 'Home' },
   { to: '/ldap', label: 'LDAP' },
   { to: '/snmp', label: 'SNMP / PBX' },
@@ -15,6 +18,21 @@ const tabs = [
 export default function Layout() {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
+  const [tabs, setTabs] = useState(FALLBACK_TABS);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/admin/tabs')
+      .then((res) => {
+        if (!cancelled && res.status === 200) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data && Array.isArray(data.tabs)) setTabs(data.tabs);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="layout">

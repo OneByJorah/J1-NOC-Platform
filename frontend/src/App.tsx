@@ -24,7 +24,7 @@ export default function App() {
           <Route path="/chrony" element={<ChronyTab />} />
           <Route path="/tickets" element={<TicketsTab />} />
           <Route path="/dns" element={<DnsTab />} />
-          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin/*" element={<AdminPanel />} />
           <Route path="/ai" element={<AIAssistant />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />

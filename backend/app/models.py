@@ -179,3 +179,19 @@ class WindowsLogEntry(Base):
         Index("ix_windows_logs_agent_timestamp", "agent_id", "timestamp"),
         Index("ix_windows_logs_source_level", "log_source", "level"),
     )
+
+
+# ===================== TABS / NAVIGATION =====================
+
+class Tab(Base):
+    __tablename__ = "tabs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    path = Column(String(128), unique=True, nullable=False, index=True)
+    label = Column(String(128), nullable=False)
+    sort_order = Column(Integer, nullable=False, default=0)
+    is_visible = Column(Boolean, nullable=False, default=True)
+    icon = Column(String(64), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

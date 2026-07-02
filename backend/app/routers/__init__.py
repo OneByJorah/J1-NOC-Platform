@@ -1,11 +1,28 @@
-from . import health
-from . import auth
-from . import dashboard
-from . import notifications
-from . import tools
-from . import ai
-from . import static_data
-from . import agent
-from . import osticket as helpdesk
+from __future__ import annotations
 
-__all__ = ["health", "auth", "dashboard", "notifications", "tools", "ai", "static_data", "agent", "helpdesk"]
+from importlib import import_module
+from typing import Dict
+
+ROUTER_MODULES: Dict[str, str] = {
+    "health": "health",
+    "auth": "auth",
+    "dashboard": "dashboard",
+    "notifications": "notifications",
+    "tools": "tools",
+    "ai": "ai",
+    "admin": "admin",
+    "static_data": "static_data",
+    "agent": "agent",
+    "helpdesk": "osticket",
+}
+
+
+def load_routers():
+    loaded = {}
+    for name, module in ROUTER_MODULES.items():
+        mod = import_module(f".{module}", __name__)
+        loaded[name] = mod
+    return loaded
+
+
+__all__ = list(ROUTER_MODULES.keys())

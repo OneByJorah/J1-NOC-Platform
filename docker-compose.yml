@@ -103,22 +103,24 @@ services:
       retries: 3
 
   prometheus:
+    network_mode: bridge
     image: prom/prometheus:v2.53.0
     restart: unless-stopped
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    networks:
-      - internal
+    ports:
+      - "9090:9090"
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=30d'
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9090/-/healthy || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
       interval: 10s
-      timeout: 3s
-      retries: 3
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   grafana:
     image: grafana/grafana:11.4.0
@@ -141,19 +143,21 @@ services:
       start_period: 10s
 
   loki:
+    network_mode: bridge
     image: grafana/loki:3.2.0
     restart: unless-stopped
     volumes:
       - ./monitoring/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
       - loki_data:/loki
-    networks:
-      - internal
+    ports:
+      - "3100:3100"
     command: ['-config.file=/etc/loki/local-config.yaml']
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3100/ready || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3100/ready || exit 1"]
       interval: 10s
-      timeout: 3s
-      retries: 3
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   crowdsec:
     image: crowdsecurity/crowdsec:latest
