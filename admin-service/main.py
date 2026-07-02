@@ -21,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 def init_db():
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
