@@ -7,3 +7,6 @@ services:
     ports:
       - "5173:80"
       - "8443:443"
+  frontend:
+    image: j1-noc-platform-frontend:latest
+    build: {}
