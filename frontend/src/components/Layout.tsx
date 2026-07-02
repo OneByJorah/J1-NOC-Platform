@@ -11,6 +11,7 @@ const FALLBACK_TABS: TabItem[] = [
   { to: '/tickets', label: 'Helpdesk' },
   { to: '/dns', label: 'DNS' },
   { to: '/chrony', label: 'Chrony' },
+  { to: '/wazuh', label: 'Wazuh SIEM' },
   { to: '/admin', label: 'Admin' },
   { to: '/ai', label: 'AI' },
 ];
@@ -37,7 +38,7 @@ export default function Layout() {
   return (
     <div className="layout">
       <header className="app-header">
-        <div className="brand">J1 NOC Platform<span className="badge">v5</span></div>
+        <div className="brand">J1 NOC Platform<span className="badge">v11</span></div>
         <div className="user">
           <span>{user?.username ? `${user.username} (${user.role})` : ''}</span>
           <button onClick={logout}>Logout</button>

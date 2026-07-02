@@ -1,6 +1,6 @@
 # J1 NOC Operations Platform (JNOP)
 
-**Version:** v5.12  
+**Version:** v11.0  
 **Status:** Production Ready  
 **Repository:** https://github.com/OneByJorah/J1-NOC-Platform
 
@@ -9,6 +9,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [System Requirements](#system-requirements)
 - [Architecture](#architecture)
 - [Technology Stack](#technology-stack)
 - [Features](#features)
@@ -27,15 +28,41 @@
 
 ## Overview
 
-The J1 NOC Operations Platform is an enterprise-grade, dark-themed Network Operations Center dashboard built for real-time infrastructure monitoring, alerting, and operations automation. It consolidates monitoring of Domain Controllers, NTP clients, DNS resolution benchmarks, OS images, logs, and helpdesk tickets into a single reactive interface.
+The J1 NOC Operations Platform is an enterprise-grade, dark-themed Network Operations Center dashboard built for real-time infrastructure monitoring, alerting, and operations automation. It consolidates monitoring of Domain Controllers, NTP clients, DNS resolution benchmarks, OS images, logs, helpdesk tickets, and Wazuh SIEM events into a single reactive interface.
 
 The platform is designed to operate in a self-hosted Linux environment with systemd service management. The backend exposes FastAPI endpoints for tab content, users, and RBAC-backed admin management. The frontend is a React + Vite application served behind Nginx and supports dynamic sidebar tabs via backend CRUD.
 
 ---
 
+## System Requirements
+
+### Minimum Hardware Requirements
+- **CPU:** 4+ cores (x86_64 architecture)
+- **RAM:** 8GB minimum (16GB+ recommended for Wazuh SIEM integration)
+- **Storage:** 50GB+ available disk space (SSD recommended)
+- **Network:** Ethernet connectivity
+
+### Recommended for AI Features
+- **CPU:** 4+ cores with AVX2 support
+- **RAM:** 16GB+ (for Ollama with 2B+ parameter models and Wazuh)
+- **Storage:** 100GB+ available (for model storage and Wazuh indices)
+
+### Ollama Integration
+- Supports 1B to 3B parameter models for optimal performance on edge devices
+- Recommended models: `llama3.2:1b`, `llama3.2:3b`, `phi3:3.8b`
+- GPU acceleration optional but recommended for larger models
+
+### Wazuh SIEM Integration
+- **Minimum:** 4 CPU cores, 8GB RAM
+- **Recommended:** 8+ CPU cores, 16GB+ RAM
+- **Storage:** 100GB+ SSD for Elasticsearch indices
+- **Network:** Dedicated interface for agent communication
+
+---
+
 ## Architecture
 
-Client → Nginx (`/etc/nginx/sites-enabled/jnop-dashboard.conf`) → FastAPI backend (`/srv/jnop/app`, port `8000`) → monitoring modules (DC, NTP, DNS, Google, Logs, Ollama, PBX, Helpdesk) → notification channels (Email, Telegram, Teams).
+Client → Nginx (`/etc/nginx/sites-enabled/jnop-dashboard.conf`) → FastAPI backend (`/srv/jnop/app`, port `8000`) → monitoring modules (DC, NTP, DNS, Google, Logs, Ollama, PBX, Helpdesk, Wazuh) → notification channels (Email, Telegram, Teams).
 
 Session identity and long-term memory are handled through **Honcho**; short-term context is handled by the platform runtime. Secrets are loaded via `/srv/jnop/config/` with restrictive `0600` permissions (never co-located with data under `/srv/jnop/data`).
 
@@ -47,12 +74,14 @@ Session identity and long-term memory are handled through **Honcho**; short-term
 |-------|-------|
 | Runtime | Linux (Ubuntu 22.04+/systemd) |
 | Backend | Python / FastAPI / Uvicorn |
-| Frontend | React + Vite (Dark Theme, v5.12) |
+| Frontend | React + Vite (Dark Theme, v11.0) |
 | Reverse Proxy | Nginx |
 | Process Manager | systemd (`jnop-backend.service`) |
 | VCS | Git + GitHub (`github.com/OneByJorah/J1-NOC-Platform`) |
 | Memory / Context | Honcho (default provider), disabled on this host |
 | Notifications | Email, Telegram, Microsoft Teams |
+| AI Engine | Ollama (1B-3B parameter models) |
+| SIEM | Wazuh Manager + Elasticsearch + Kibana |
 | Admin | Backend CRUD for tabs + users/roles (admin only) |
 | Release path | Build frontend and serve dist via Nginx (`/var/www/noc`) |
 
@@ -66,7 +95,8 @@ Session identity and long-term memory are handled through **Honcho**; short-term
 - **Log Viewer**: unified event timeline across platform modules.
 - **Google Sync**: interface for cloud sync status and health indicators.
 - **Ubuntu Server**: host-level metrics and kernel event tracking.
-- **Ollama AI**: optional AI operations assistant integration.
+- **Ollama AI**: interactive AI assistant with 1B-3B parameter models.
+- **Wazuh SIEM**: security information and event management integration.
 - **PBX + Helpdesk**: call-path monitoring; ticket lifecycle tracking.
 - **Notification channels**: Email / Telegram / Teams events, with per-channel counters and prefixed styling in logs.
 - **Tabs / Admin Console**: backend-managed navigation tabs + admin users/roles pages.
@@ -101,6 +131,11 @@ cp backend/.env.example backend/.env
 | `OPENROUTER_API_KEY` | OpenRouter credential (optional) | Used if gateway/auxiliary models require chat completions |
 | `DEEPSEEK_API_KEY`, `XAI_API_KEY`, ... | Provider keys | Optional per enabled integration |
 | `VITE_API_URL` | Frontend API base | Defaults to `/api` |
+| `OLLAMA_HOST` | Ollama service endpoint | Defaults to `http://localhost:11434` |
+| `OLLAMA_MODEL` | Default model for AI features | e.g., `llama3.2:1b` |
+| `WAZUH_API_URL` | Wazuh Manager API endpoint | e.g., `https://wazuh-manager:55000` |
+| `WAZUH_USERNAME` | Wazuh API username | |
+| `WAZUH_PASSWORD` | Wazuh API password | |
 
 Backend `/srv/jnop/config/` uses file-based configuration with `0600` permissions for sensitive values.
 
@@ -112,6 +147,15 @@ Backend `/srv/jnop/config/` uses file-based configuration with `0600` permission
 # Start the backend service
 sudo systemctl start jnop-backend.service
 sudo systemctl enable jnop-backend.service
+
+# Start Ollama service (if using AI features)
+sudo systemctl start ollama.service
+sudo systemctl enable ollama.service
+
+# Start Wazuh services (if using SIEM features)
+sudo systemctl start wazuh-manager.service
+sudo systemctl start elasticsearch.service
+sudo systemctl start kibana.service
 
 # Tail logs
 sudo journalctl -u jnop-backend.service -f
@@ -171,13 +215,16 @@ J1-NOC-Platform/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/
+│   │   │   ├── DashboardHome.tsx
+│   │   │   ├── WazuhSIEM.tsx
+│   │   │   └── ...
 │   │   ├── components/
 │   │   ├── services/
 │   │   └── App.tsx
 │   └── dist/
 │       └── index.html          # Dashboard build output
 ├── docs/
-│   └── screenshots/
+│   └── screenshots/            # Live captures from production instance
 ├── monitoring/
 └── scripts/
     └── sample_seed.sh
@@ -187,7 +234,10 @@ J1-NOC-Platform/
 
 ## Screenshots
 
-All screenshots are live captures from the production instance (as of 2026-06-15 v5.12).
+All screenshots are live captures from the production instance (as of v11.0).
+
+### Dashboard Overview
+![Dashboard Overview](docs/screenshots/dashboard-overview.png)
 
 ### DC Replication
 ![DC Replication](docs/screenshots/dc-replication.png)
@@ -216,14 +266,13 @@ All screenshots are live captures from the production instance (as of 2026-06-15
 ### Helpdesk
 ![Helpdesk](docs/screenshots/helpdesk.png)
 
-### Admin Tabs
+### Admin Console
 ![Admin Tabs](docs/screenshots/admin-tabs.png)
-
-### Admin Users
 ![Admin Users](docs/screenshots/admin-users.png)
-
-### Admin Roles
 ![Admin Roles](docs/screenshots/admin-roles.png)
+
+### Wazuh SIEM
+![Wazuh SIEM](docs/screenshots/wazuh-siem.png)
 
 ---
 
