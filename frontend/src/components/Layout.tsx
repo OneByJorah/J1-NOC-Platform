@@ -38,7 +38,7 @@ export default function Layout() {
   return (
     <div className="layout">
       <header className="app-header">
-        <div className="brand">J1 NOC Platform<span className="badge">v11</span></div>
+        <div className="brand">J1 NOC Platform<span className="badge">v11.0</span></div>
         <div className="user">
           <span>{user?.username ? `${user.username} (${user.role})` : ''}</span>
           <button onClick={logout}>Logout</button>

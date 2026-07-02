@@ -8,15 +8,24 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from app.config import get_settings
+
 router = APIRouter()
 
-WAZUH_API_URL = os.getenv("WAZUH_API_URL", "https://localhost:55000").rstrip("/")
-WAZUH_USERNAME = os.getenv("WAZUH_USERNAME", "wazuh")
-WAZUH_PASSWORD = os.getenv("WAZUH_PASSWORD", "wazuh")
+def _wazuh_config():
+    settings = get_settings()
+    return {
+        "url": getattr(settings, "wazuh_api_url", os.getenv("WAZUH_API_URL", "https://localhost:55000")).rstrip("/"),
+        "username": getattr(settings, "wazuh_username", os.getenv("WAZUH_USERNAME", "wazuh")),
+        "password": getattr(settings, "wazuh_password", os.getenv("WAZUH_PASSWORD", "wazuh")),
+        "verify_ssl": getattr(settings, "wazuh_verify_ssl", os.getenv("WAZUH_VERIFY_SSL", "false")).lower() in ("1", "true", "yes"),
+    }
+
 OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
 
-def _session() -> requests.Session:
+def _session(verify: bool = False) -> requests.Session:
     session = requests.Session()
+    session.verify = verify
     retries = Retry(total=2, backoff_factor=0.5, status_forcelist=[502, 503, 504])
     session.mount("https://", HTTPAdapter(max_retries=retries))
     session.mount("http://", HTTPAdapter(max_retries=retries))
@@ -25,12 +34,12 @@ def _session() -> requests.Session:
 
 def get_wazuh_token() -> Optional[str]:
     """Get authentication token for Wazuh API"""
+    cfg = _wazuh_config()
     try:
-        with _session() as session:
+        with _session(verify=cfg["verify_ssl"]) as session:
             response = session.post(
-                urllib.parse.urljoin(WAZUH_API_URL, "/security/user/authenticate"),
-                auth=(WAZUH_USERNAME, WAZUH_PASSWORD),
-                verify=False,
+                urllib.parse.urljoin(cfg["url"], "/security/user/authenticate"),
+                auth=(cfg["username"], cfg["password"]),
                 timeout=10,
             )
         if response.status_code == 200:
@@ -48,11 +57,11 @@ def get_wazuh_status():
             return JSONResponse({"status": "Disconnected", "error": "Authentication failed"})
 
         headers = {"Authorization": f"Bearer {token}"}
-        with _session() as session:
+        cfg = _wazuh_config()
+        with _session(verify=cfg["verify_ssl"]) as session:
             response = session.get(
-                urllib.parse.urljoin(WAZUH_API_URL, "/manager/status"),
+                urllib.parse.urljoin(cfg["url"], "/manager/status"),
                 headers=headers,
-                verify=False,
                 timeout=10,
             )
 
@@ -72,11 +81,11 @@ def get_wazuh_agents():
             raise HTTPException(status_code=401, detail="Authentication failed")
 
         headers = {"Authorization": f"Bearer {token}"}
-        with _session() as session:
+        cfg = _wazuh_config()
+        with _session(verify=cfg["verify_ssl"]) as session:
             response = session.get(
-                urllib.parse.urljoin(WAZUH_API_URL, "/agents"),
+                urllib.parse.urljoin(cfg["url"], "/agents"),
                 headers=headers,
-                verify=False,
                 timeout=10,
             )
 
@@ -103,12 +112,12 @@ def get_wazuh_alerts(limit: int = 50, offset: int = 0):
             "offset": offset,
             "sort": "-timestamp",
         }
-        with _session() as session:
+        cfg = _wazuh_config()
+        with _session(verify=cfg["verify_ssl"]) as session:
             response = session.get(
-                urllib.parse.urljoin(WAZUH_API_URL, "/alerts"),
+                urllib.parse.urljoin(cfg["url"], "/alerts"),
                 headers=headers,
                 params=params,
-                verify=False,
                 timeout=10,
             )
 
@@ -132,27 +141,25 @@ def get_wazuh_overview():
         headers = {"Authorization": f"Bearer {token}"}
 
         # Get manager info
-        with _session() as session:
+        cfg = _wazuh_config()
+        with _session(verify=cfg["verify_ssl"]) as session:
             manager_response = session.get(
-                urllib.parse.urljoin(WAZUH_API_URL, "/manager/info"),
+                urllib.parse.urljoin(cfg["url"], "/manager/info"),
                 headers=headers,
-                verify=False,
                 timeout=10,
             )
 
             # Get agents summary
             agents_response = session.get(
-                urllib.parse.urljoin(WAZUH_API_URL, "/agents/summary/status"),
+                urllib.parse.urljoin(cfg["url"], "/agents/summary/status"),
                 headers=headers,
-                verify=False,
                 timeout=10,
             )
 
             # Get alerts summary
             alerts_response = session.get(
-                urllib.parse.urljoin(WAZUH_API_URL, "/overview/alerts"),
+                urllib.parse.urljoin(cfg["url"], "/overview/alerts"),
                 headers=headers,
-                verify=False,
                 timeout=10,
             )
 
@@ -173,7 +180,8 @@ def get_wazuh_overview():
 def get_ollama_status():
     """Get Ollama service status"""
     try:
-        with _session() as session:
+        cfg = _wazuh_config()
+        with _session(verify=cfg["verify_ssl"]) as session:
             response = session.get(
                 urllib.parse.urljoin(OLLAMA_API_URL, "/api/tags"),
                 timeout=10,
@@ -195,7 +203,8 @@ def chat_with_ollama(payload: Dict[str, Any]):
         if not prompt:
             raise HTTPException(status_code=400, detail="Prompt is required")
 
-        with _session() as session:
+        cfg = _wazuh_config()
+        with _session(verify=cfg["verify_ssl"]) as session:
             response = session.post(
                 urllib.parse.urljoin(OLLAMA_API_URL, "/api/generate"),
                 json={

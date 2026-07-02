@@ -15,6 +15,15 @@ class Settings(BaseSettings):
     backend_cors_origins: list[str] = ["http://localhost", "http://127.0.0.1"]
     access_token_expire_minutes: int = 60
 
+    # Wazuh SIEM integration
+    wazuh_api_url: str = os.getenv("WAZUH_API_URL", "https://localhost:55000")
+    wazuh_username: str = os.getenv("WAZUH_USERNAME", "wazuh")
+    wazuh_password: str = os.getenv("WAZUH_PASSWORD", "wazuh")
+    wazuh_verify_ssl: str = os.getenv("WAZUH_VERIFY_SSL", "false")
+
+    # Ollama local AI
+    ollama_host: str = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
 
 def get_settings() -> Settings:
     return Settings()

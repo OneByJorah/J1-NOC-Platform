@@ -11,6 +11,7 @@ python-jose[crypthentication]==3.4.0
 passlib[bcrypt]==1.7.4
 prometheus-client==0.20.0
 httpx==0.27.0
+requests==2.32.3
 email-validator==2.2.0
 
 python-multipart==0.0.31
