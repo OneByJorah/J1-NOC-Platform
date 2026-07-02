@@ -8,8 +8,15 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .database import engine, Base
 from . import routers as _routers
-from .routers import health, auth, dashboard, notifications, tools, ai, static_data, agent, osticket as helpdesk
+from .routers import static_data
+from .routers import health, auth, dashboard, notifications, tools, ai, osticket as helpdesk
+
 settings = get_settings()
+
+try:  # optional, missing in some environments
+    from .routers import admin as _admin
+except Exception:  # pragma: no cover - degrade gracefully
+    _admin = None
 
 
 @asynccontextmanager
@@ -36,11 +43,11 @@ def create_app() -> FastAPI:
     )
 
     @app.get("/healthz", include_in_schema=False)
-    def healthz_root():
+    def healthz_root() -> dict:
         return {"status": "ok"}
 
     @app.post("/forcerepl", include_in_schema=False)
-    async def forcerepl_root(request: Request):
+    async def forcerepl_root(request: Request) -> JSONResponse:
         try:
             body_bytes = await request.body()
             body = json.loads(body_bytes.decode() if body_bytes else "{}")
@@ -49,15 +56,26 @@ def create_app() -> FastAPI:
         return JSONResponse({"Success": True, "Request": body})
 
     app.include_router(static_data.router, prefix="/api")
+
     app.include_router(health.router)
     app.include_router(health.router, prefix="/api")
+
     app.include_router(auth.router, prefix="/api")
     app.include_router(dashboard.router, prefix="/api")
     app.include_router(notifications.router, prefix="/api")
     app.include_router(tools.router, prefix="/api")
     app.include_router(ai.router, prefix="/api")
-    app.include_router(agent.router, prefix="/api")
+
+    if getattr(_routers, "agent", None) is not None:
+        import app.routers.agent as _agent  # type: ignore[import-not-found]
+
+        if hasattr(_agent, "router"):
+            app.include_router(_agent.router, prefix="/api")
+
     app.include_router(helpdesk.router, prefix="/api")
+
+    if _admin is not None:
+        app.include_router(getattr(_admin, "router"), prefix="/api")
 
     return app
 
