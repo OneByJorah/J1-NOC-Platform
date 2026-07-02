@@ -56,8 +56,9 @@ try:
         {"path": "/tickets", "label": "Helpdesk", "sort_order": 4, "is_visible": True, "icon": "ticket"},
         {"path": "/dns", "label": "DNS", "sort_order": 5, "is_visible": True, "icon": "dns"},
         {"path": "/chrony", "label": "Chrony", "sort_order": 6, "is_visible": True, "icon": "schedule"},
-        {"path": "/admin", "label": "Admin", "sort_order": 7, "is_visible": True, "icon": "settings"},
-        {"path": "/ai", "label": "AI", "sort_order": 8, "is_visible": True, "icon": "psychology"},
+        {"path": "/wazuh", "label": "Wazuh SIEM", "sort_order": 7, "is_visible": True, "icon": "security"},
+        {"path": "/admin", "label": "Admin", "sort_order": 8, "is_visible": True, "icon": "settings"},
+        {"path": "/ai", "label": "AI", "sort_order": 9, "is_visible": True, "icon": "psychology"},
     ]
     created = 0
     for item in defaults:

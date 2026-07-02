@@ -9,7 +9,7 @@ from .config import get_settings
 from .database import engine, Base
 from . import routers as _routers
 from .routers import static_data
-from .routers import health, auth, dashboard, notifications, tools, ai, osticket as helpdesk
+from .routers import health, auth, dashboard, notifications, tools, ai, osticket as helpdesk, wazuh
 
 settings = get_settings()
 
@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="J1 NOC Platform",
-        version="0.2.0",
+        version="11.0.0",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
         lifespan=lifespan,
@@ -65,6 +65,7 @@ def create_app() -> FastAPI:
     app.include_router(notifications.router, prefix="/api")
     app.include_router(tools.router, prefix="/api")
     app.include_router(ai.router, prefix="/api")
+    app.include_router(wazuh.router, prefix="/api")
 
     if getattr(_routers, "agent", None) is not None:
         import app.routers.agent as _agent  # type: ignore[import-not-found]

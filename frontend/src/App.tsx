@@ -10,6 +10,7 @@ import AdminPanel from './pages/AdminPanel';
 import AIAssistant from './pages/AIAssistant';
 import LDAPTab from './pages/LDAPTab';
 import SNMPTab from './pages/SNMPTab';
+import WazuhSIEM from './pages/WazuhSIEM';
 import LoginPage from './pages/LoginPage';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/dns" element={<DnsTab />} />
           <Route path="/admin/*" element={<AdminPanel />} />
           <Route path="/ai" element={<AIAssistant />} />
+          <Route path="/wazuh" element={<WazuhSIEM />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
