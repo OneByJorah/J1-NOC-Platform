@@ -12,12 +12,14 @@ import LDAPTab from './pages/LDAPTab';
 import SNMPTab from './pages/SNMPTab';
 import WazuhSIEM from './pages/WazuhSIEM';
 import LoginPage from './pages/LoginPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 export default function App() {
   return (
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/setup" element={<OnboardingPage />} />
         <Route element={<RequireAuth><Layout /></RequireAuth>}>
           <Route path="/" element={<DashboardHome />} />
           <Route path="/ldap" element={<LDAPTab />} />

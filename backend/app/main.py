@@ -10,15 +10,17 @@ from .config import get_settings
 from .database import engine, Base
 from . import routers as _routers
 from .routers import static_data
-from .routers import health, auth, dashboard, notifications, tools, ai, osticket as helpdesk, wazuh
-
-settings = get_settings()
-logger = logging.getLogger(__name__)
+from .routers import health, auth, dashboard, notifications, tools, ai, osticket as helpdesk, wazuh, setup
 
 try:  # optional, missing in some environments
     from .routers import admin as _admin
+    from .routers import settings as _settings
 except Exception:  # pragma: no cover - degrade gracefully
     _admin = None
+    _settings = None
+
+settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -63,6 +65,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(health.router, prefix="/api")
 
+    app.include_router(setup.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
     app.include_router(dashboard.router, prefix="/api")
     app.include_router(notifications.router, prefix="/api")
@@ -80,6 +83,9 @@ def create_app() -> FastAPI:
 
     if _admin is not None:
         app.include_router(getattr(_admin, "router"), prefix="/api")
+
+    if _settings is not None:
+        app.include_router(getattr(_settings, "router"), prefix="/api")
 
     return app
 
