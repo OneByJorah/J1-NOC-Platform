@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { get, post, del } from '../services/api';
+import { get, post, del, put } from '../services/api';
 import AdminLogin from './AdminLogin';
 
 type Tab = {
@@ -70,12 +70,13 @@ export default function AdminPanel() {
       { key: 'tabs', to: '/admin/tabs', label: 'Tabs' },
       { key: 'users', to: '/admin/users', label: 'Users' },
       { key: 'roles', to: '/admin/roles', label: 'Roles' },
+      { key: 'settings', to: '/admin/settings', label: 'Settings' },
     ],
     [],
   );
 
   const raw = location.pathname.replace(/^\/admin\/?/, '') || 'tabs';
-  const active = (['tabs', 'users', 'roles'] as const).includes(raw as 'tabs' | 'users' | 'roles') ? (raw as 'tabs' | 'users' | 'roles') : 'tabs';
+  const active = (['tabs', 'users', 'roles', 'settings'] as const).includes(raw as 'tabs' | 'users' | 'roles' | 'settings') ? (raw as 'tabs' | 'users' | 'roles' | 'settings') : 'tabs';
 
   return (
     <div className="admin-shell">
@@ -101,6 +102,7 @@ export default function AdminPanel() {
           <Route path="tabs" element={<TabsManager tabs={tabs} onChange={setTabs} />} />
           <Route path="users" element={<UsersManager />} />
           <Route path="roles" element={<RolesManager />} />
+          <Route path="settings" element={<SettingsManager />} />
           <Route path="*" element={<Navigate to="/admin/tabs" replace />} />
         </Routes>
       </div>
@@ -269,3 +271,89 @@ function RolesManager() {
     </div>
   );
 }
+
+type Setting = {
+  key: string;
+  value: string;
+  is_encrypted: boolean;
+  category?: string | null;
+  description?: string | null;
+};
+
+function SettingsManager() {
+  const [settings, setSettings] = useState<Setting[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    get('/admin/settings').then((res: any) => setSettings(res?.settings || [])).catch(() => setSettings([]));
+  }, []);
+
+  const update = (key: string, value: string) => {
+    setSettings((prev) => prev.map((s) => (s.key === key ? { ...s, value } : s)));
+    setSaved(false);
+  };
+
+  const save = async () => {
+    setLoading(true);
+    try {
+      await put('/admin/settings', { settings });
+      setSaved(true);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to save');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const grouped = settings.reduce((acc, s) => {
+    const cat = s.category || 'other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(s);
+    return acc;
+  }, {} as Record<string, Setting[]>);
+
+  const categories: Record<string, string> = {
+    core: 'Core platform',
+    auth: 'Authentication / CORS',
+    monitoring: 'Monitoring',
+    integrations: 'Integrations',
+    ai: 'AI / Ollama',
+    other: 'Other',
+  };
+
+  return (
+    <div className="admin-section">
+      <div className="admin-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3>Credential &amp; Settings Vault</h3>
+          <div>
+            {saved && <span style={{ color: 'var(--ok)', marginRight: 12 }}>Saved</span>}
+            <button onClick={save} disabled={loading}>{loading ? 'Saving…' : 'Save all'}</button>
+          </div>
+        </div>
+        <p className="dim">Values are encrypted at rest in the database. They never belong in Git.</p>
+        {Object.entries(grouped).map(([cat, items]) => (
+          <div key={cat} style={{ marginTop: 20 }}>
+            <h4 style={{ textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em', color: 'var(--primary)' }}>{categories[cat] || cat}</h4>
+            <div className="admin-form" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+              {items.map((s) => (
+                <label key={s.key}>
+                  <span>{s.key}{s.is_encrypted ? ' 🔒' : ''}</span>
+                  <input
+                    type={s.is_encrypted ? 'password' : 'text'}
+                    value={s.value}
+                    onChange={(e) => update(s.key, e.target.value)}
+                    placeholder={s.description || ''}
+                  />
+                  {s.description && <small className="dim">{s.description}</small>}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+

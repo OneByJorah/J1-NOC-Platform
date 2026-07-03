@@ -195,3 +195,19 @@ class Tab(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class EncryptedSetting(Base):
+    __tablename__ = "encrypted_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(255), unique=True, nullable=False, index=True)
+    value = Column(Text, nullable=False)  # Fernet-encrypted base64
+    is_encrypted = Column(Boolean, nullable=False, default=True)
+    category = Column(String(64), nullable=True)
+    description = Column(Text, nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index("ix_encrypted_settings_category", "category"),
+    )
