@@ -5,6 +5,6 @@ RUN npm ci --include=dev
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine
+FROM nginx:1.30.3-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
