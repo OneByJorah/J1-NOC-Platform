@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOC Operations Platform | v5.0</title>
+<title>NOC Operations Platform | v11.0</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
@@ -190,7 +190,7 @@ header{text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1p
 
 .tab-pane{display:none}
 
-.tab-pane.active{display:block;animation:fadeIn .2s ease}
+.tab-pane.active{display:block;opacity:1;animation:fadeIn .2s ease forwards}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
@@ -671,7 +671,7 @@ footer span{color:var(--primary)}
   <div class="title-row">
     <span class="logo-icon">🖥️</span>
     <h1><span class="glitch" data-text="NOC OPERATIONS PLATFORM">NOC OPERATIONS PLATFORM</span></h1>
-    <span class="ver">v5.0</span>
+    <span class="ver">v11.0</span>
   </div>
   <div class="hdr-meta">
     <span><span id="overall-dot" class="sdot"></span><span id="overall-status">All Systems OK</span></span>
@@ -1095,6 +1095,7 @@ What would you like to know?</div>
       </div>
     </div>
   </div>
+</div>
 <!-- ════════════════════ TAB 8: PBX / MITEL SNMP ════════════════════ -->
 <div id="tab-pbx" class="tab-pane">
   <div class="ctrls">
@@ -1283,7 +1284,7 @@ $output | ConvertTo-Json -Depth 3 | Out-File "C:\DC_Dashboard\ntp_status.json" -
 
 <!-- FOOTER -->
 <footer>
-  NOC Operations Platform v5.0 &nbsp;|&nbsp; Developed by <span>Jhonattan L. Jimenez</span> &nbsp;|&nbsp;
+  NOC Operations Platform v11.0 &nbsp;|&nbsp; Developed by <span>Jhonattan L. Jimenez</span> &nbsp;|&nbsp;
   <span id="footer-summary">Loading…</span>
 </footer>
 
@@ -2693,7 +2694,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Start NTP clock
   updateNTPClock();
   // Initial events
-  addGlobalEvent('info','🚀','NOC Operations Platform v5.0 initialized');
+  addGlobalEvent('info','🚀','NOC Operations Platform v11.0 initialized');
 });
 </script>
 </body>
