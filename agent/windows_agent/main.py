@@ -23,7 +23,7 @@ import win32evtlogutil
 import win32con
 
 # Configuration
-NOC_URL = os.getenv("NOC_URL", "http://100.72.207.60")
+NOC_URL = os.getenv("NOC_URL", "http://<noc-tailscale-ip>")
 AGENT_TOKEN = os.getenv("AGENT_TOKEN", "change-me")
 AGENT_ID_FILE = Path(os.getenv("APPDATA", ".")) / "j1noc" / "agent_id"
 CONFIG_FILE = Path(os.getenv("APPDATA", ".")) / "j1noc" / "config.json"

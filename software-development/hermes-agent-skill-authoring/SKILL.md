@@ -161,7 +161,7 @@ Never accept only HTTP 200 as proof. Confirm the served body actually represents
 
 ### Public repo exposure guard
 - Public repo docs must not include internal access notes that expose private infrastructure.
-- Do not publish raw IPs (`100.72.207.0/24`, `192.168.x.x`), internal hostnames, or credential strings in README / converted markdown.
+- Do not publish raw IPs (`<tailnet-cidr>`, `192.168.x.x`), internal hostnames, or credential strings in README / converted markdown.
 - Before converting docs for public commit, sweep access notes with a search pass.
 
 ### Durable pruning signals

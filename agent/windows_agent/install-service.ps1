@@ -16,7 +16,7 @@
 #>
 
 param(
-    [string]$NocUrl = "http://100.72.207.60",
+    [string]$NocUrl = "http://<noc-tailscale-ip>",
     [string]$Token = "change-me",
     [string]$AgentPath = "",
     [string]$ServiceName = "J1NOC-Agent",
