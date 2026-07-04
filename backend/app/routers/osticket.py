@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse
 import os
+
 import httpx
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ async def list_tickets(request: Request):
     return JSONResponse([
         {"id": "1001", "name": "Printer offline", "status": "Open", "priority": "Medium", "created": "2026-06-13T00:00:00Z"},
         {"id": "1002", "name": "VPN disconnect", "status": "In Progress", "priority": "High", "created": "2026-06-13T01:00:00Z"},
-        {"id": "1003", "name": "Laptop provisioning", "status": "Closed", "priority": "Low", "created": "2026-06-12T12:00:00Z"}
+        {"id": "1003", "name": "Laptop provisioning", "status": "Closed", "priority": "Low", "created": "2026-06-12T12:00:00Z"},
     ], status_code=200)
 
 

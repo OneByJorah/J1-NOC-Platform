@@ -1,23 +1,24 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, PlainTextResponse
 import json
 import pathlib
 
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse, PlainTextResponse
+
 router = APIRouter()
-BASE = pathlib.Path('/srv/jnop/data')
-LOG_DIR = pathlib.Path('/srv/jnop/logs')
+BASE = pathlib.Path("/srv/jnop/data")
+LOG_DIR = pathlib.Path("/srv/jnop/logs")
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
-@router.get('/dc_status')
+@router.get("/dc_status")
 def dc_status():
-    p = BASE / 'dc_status.json'
+    p = BASE / "dc_status.json"
     try:
         payload = json.loads(p.read_text())
     except Exception:
         payload = {}
     if isinstance(payload, dict):
-        data = payload.get('DCs') or payload.get('dc_status') or []
+        data = payload.get("DCs") or payload.get("dc_status") or []
     elif isinstance(payload, list):
         data = payload
     else:
@@ -25,9 +26,9 @@ def dc_status():
     return JSONResponse(data)
 
 
-@router.get('/ntp_status')
+@router.get("/ntp_status")
 def ntp_status():
-    p = BASE / 'ntp_status.json'
+    p = BASE / "ntp_status.json"
     try:
         payload = json.loads(p.read_text())
     except Exception:
@@ -35,44 +36,44 @@ def ntp_status():
     return JSONResponse(payload or {})
 
 
-@router.get('/ntp_clients')
+@router.get("/ntp_clients")
 def ntp_clients():
-    p = BASE / 'ntp_status.json'
+    p = BASE / "ntp_status.json"
     data = {}
     try:
         data = json.loads(p.read_text()) or {}
     except Exception:
         data = {}
-    clients = data.get('Clients') or data.get('clients') or data.get('ntp_clients') or []
+    clients = data.get("Clients") or data.get("clients") or data.get("ntp_clients") or []
     return JSONResponse(clients)
 
 
-@router.post('/dc/forcerepl')
+@router.post("/dc/forcerepl")
 async def force_repl(request: Request):
     body = await request.json()
-    return JSONResponse({'Success': True, 'Request': body})
+    return JSONResponse({"Success": True, "Request": body})
 
 
-@router.get('/tags')
+@router.get("/tags")
 def tags():
     return JSONResponse([])
 
 
-@router.post('/generate')
+@router.post("/generate")
 async def generate(request: Request):
     body = await request.json()
-    return JSONResponse({'Success': True, 'Request': body})
+    return JSONResponse({"Success": True, "Request": body})
 
 
-@router.get('/gcds-sample.log', include_in_schema=False)
-@router.get('/dc_replication_monitor.txt', include_in_schema=False)
+@router.get("/gcds-sample.log", include_in_schema=False)
+@router.get("/dc_replication_monitor.txt", include_in_schema=False)
 def serve_logs():
-    return PlainTextResponse('log placeholder')
+    return PlainTextResponse("log placeholder")
 
 
 # ── PBX / Mitel SNMP endpoints ──────────────────────────────────────────────
 
-@router.get('/pbx/status')
+@router.get("/pbx/status")
 def pbx_status():
     return JSONResponse([
         {
@@ -105,7 +106,7 @@ def pbx_status():
     ])
 
 
-@router.get('/pbx/snmp/walk')
+@router.get("/pbx/snmp/walk")
 def pbx_snmp_walk():
     return JSONResponse({"entries": [
         {"host": "10.0.1.12", "oid": "1.3.6.1.2.1.1.3.0", "description": "sysUpTime",
@@ -148,7 +149,7 @@ SSL_RESPONSE_TIMES = [
 # ── 90-day uptime heatmap (Tianji-inspired) ──────────────────────────────────
 # Generates deterministic but realistic-looking uptime data
 def _gen_uptime(days=90):
-    import hashlib, random
+    import hashlib
     data = []
     for i in range(days):
         d = (24 * 60 * 60 * 1000) * (days - 1 - i)
@@ -175,16 +176,16 @@ SSL_UPTIME = {
 }
 
 
-@router.get('/ssl/certs')
+@router.get("/ssl/certs")
 def ssl_certs():
     return JSONResponse(SSL_DOMAINS)
 
 
-@router.get('/ssl/response')
+@router.get("/ssl/response")
 def ssl_response():
     return JSONResponse(SSL_RESPONSE_TIMES)
 
 
-@router.get('/ssl/uptime')
+@router.get("/ssl/uptime")
 def ssl_uptime():
     return JSONResponse(SSL_UPTIME)

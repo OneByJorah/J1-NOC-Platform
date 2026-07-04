@@ -1,17 +1,16 @@
-from datetime import datetime
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     DateTime,
-    Integer,
-    JSON,
-    String,
-    Text,
     ForeignKey,
     Index,
+    Integer,
+    String,
+    Text,
 )
-from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from .database import Base
 

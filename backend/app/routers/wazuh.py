@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
 import os
 import urllib.parse
-from typing import Optional, Dict, Any
+from typing import Any
 
 import requests
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -32,7 +32,7 @@ def _session(verify: bool = False) -> requests.Session:
     return session
 
 
-def get_wazuh_token() -> Optional[str]:
+def get_wazuh_token() -> str | None:
     """Get authentication token for Wazuh API"""
     cfg = _wazuh_config()
     try:
@@ -194,7 +194,7 @@ def get_ollama_status():
 
 
 @router.post("/ollama/chat")
-def chat_with_ollama(payload: Dict[str, Any]):
+def chat_with_ollama(payload: dict[str, Any]):
     """Chat with Ollama model"""
     try:
         model = payload.get("model", "llama3.2:1b")

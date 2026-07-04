@@ -1,22 +1,20 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 from ..database import SessionLocal
-from ..models import User, Role, Tab
+from ..models import Role, Tab, User
 from ..schemas import (
     RoleCreate,
     RoleOut,
-    UserCreate,
-    UserUpdate,
-    UserOut,
     TabCreate,
-    TabUpdate,
     TabOut,
+    TabUpdate,
+    UserCreate,
+    UserOut,
+    UserUpdate,
 )
-from .auth import get_current_user, require_roles, get_password_hash
+from .auth import get_password_hash, require_roles
 
 router = APIRouter()
 
@@ -44,7 +42,7 @@ def _get_tab_or_404(tab_id: int) -> Tab:
 
 
 class RolesResponse(BaseModel):
-    roles: List[RoleOut]
+    roles: list[RoleOut]
 
 
 @router.get("/admin/roles", response_model=RolesResponse)
@@ -71,14 +69,14 @@ def create_role(payload: RoleCreate, _: User = Depends(require_roles("admin"))):
 
 
 class UsersResponse(BaseModel):
-    users: List[UserOut]
+    users: list[UserOut]
     total: int
 
 
 @router.get("/admin/users", response_model=UsersResponse)
 def list_users(
-    q: Optional[str] = Query(default=None),
-    active: Optional[bool] = Query(default=None),
+    q: str | None = Query(default=None),
+    active: bool | None = Query(default=None),
     _: User = Depends(require_roles("admin")),
 ):
     db = SessionLocal()
@@ -150,7 +148,7 @@ def delete_user(
 
 
 class TabsResponse(BaseModel):
-    tabs: List[TabOut]
+    tabs: list[TabOut]
 
 
 @router.get("/admin/tabs", response_model=TabsResponse)

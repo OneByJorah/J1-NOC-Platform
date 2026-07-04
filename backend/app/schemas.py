@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr
 
@@ -7,7 +6,7 @@ from pydantic import BaseModel, EmailStr
 class RoleBase(BaseModel):
     name: str
     slug: str
-    description: Optional[str] = None
+    description: str | None = None
     permissions: dict = {}
 
 
@@ -26,9 +25,9 @@ class RoleOut(RoleBase):
 
 
 class UserBase(BaseModel):
-    email: Optional[EmailStr] = None
+    email: EmailStr | None = None
     username: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
 
 
 class UserCreate(UserBase):
@@ -37,10 +36,10 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
-    password: Optional[str] = None
-    role_id: Optional[int] = None
-    is_active: Optional[bool] = None
-    is_locked: Optional[bool] = None
+    password: str | None = None
+    role_id: int | None = None
+    is_active: bool | None = None
+    is_locked: bool | None = None
 
 
 class UserOut(UserBase):
@@ -55,8 +54,8 @@ class UserOut(UserBase):
 class AuditLogOut(BaseModel):
     id: int
     action: str
-    target_type: Optional[str]
-    target_id: Optional[int]
+    target_type: str | None
+    target_id: int | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -68,9 +67,9 @@ class AuditLogOut(BaseModel):
 class TabBase(BaseModel):
     path: str
     label: str
-    sort_order: Optional[int] = 0
-    is_visible: Optional[bool] = True
-    icon: Optional[str] = None
+    sort_order: int | None = 0
+    is_visible: bool | None = True
+    icon: str | None = None
 
 
 class TabCreate(TabBase):
@@ -78,11 +77,11 @@ class TabCreate(TabBase):
 
 
 class TabUpdate(BaseModel):
-    path: Optional[str] = None
-    label: Optional[str] = None
-    sort_order: Optional[int] = None
-    is_visible: Optional[bool] = None
-    icon: Optional[str] = None
+    path: str | None = None
+    label: str | None = None
+    sort_order: int | None = None
+    is_visible: bool | None = None
+    icon: str | None = None
 
 
 class TabOut(TabBase):

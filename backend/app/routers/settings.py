@@ -1,11 +1,12 @@
-from typing import Any, Optional
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from ..database import SessionLocal
+from ..encryption import decrypt, encrypt
 from ..models import EncryptedSetting
-from ..encryption import encrypt, decrypt
-from .auth import get_current_user, require_roles
+from .auth import require_roles
 
 router = APIRouter()
 
@@ -109,7 +110,7 @@ def list_settings(_: Any = Depends(require_roles("admin"))):
                             is_encrypted=True,
                             category=category,
                             description=_resolve_description(key),
-                        )
+                        ),
                     )
         return SettingsListResponse(settings=settings)
     finally:

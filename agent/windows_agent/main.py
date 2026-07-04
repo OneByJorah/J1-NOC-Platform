@@ -3,24 +3,23 @@ J1 NOC Platform - Windows Agent
 Collects Windows services, event logs, and custom log files (e.g., Google CloudSync)
 Pushes data to NOC backend via HTTP API.
 """
-import os
-import sys
-import json
-import uuid
 import asyncio
+import json
+import os
 import platform
-import subprocess
 import socket
+import sys
 import time
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 import httpx
 import psutil
+import win32con
 import win32evtlog
 import win32evtlogutil
-import win32con
 
 # Configuration
 NOC_URL = os.getenv("NOC_URL", "http://100.72.207.60")
@@ -52,7 +51,7 @@ def get_agent_id() -> str:
     return agent_id
 
 
-def load_config() -> Dict[str, Any]:
+def load_config() -> dict[str, Any]:
     """Load agent configuration"""
     default = {
         "event_channels": ["System", "Application"],
@@ -66,9 +65,9 @@ def load_config() -> Dict[str, Any]:
                     r"C:\Users\*\AppData\Local\Google\DriveFS\logs\*.log",
                 ],
                 "patterns": [
-                    r"(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z?)\s+(?P<level>\w+)\s+(?P<message>.+)"
+                    r"(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d+Z?)\s+(?P<level>\w+)\s+(?P<message>.+)",
                 ],
-            }
+            },
         ],
         "tags": [],
     }
@@ -81,7 +80,7 @@ def load_config() -> Dict[str, Any]:
     return default
 
 
-def save_config(config: Dict[str, Any]):
+def save_config(config: dict[str, Any]):
     CONFIG_FILE.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(config, indent=2))
 
@@ -107,7 +106,7 @@ def get_os_version() -> str:
 
 # ===================== COLLECTORS =====================
 
-async def collect_services() -> List[Dict[str, Any]]:
+async def collect_services() -> list[dict[str, Any]]:
     """Collect Windows services"""
     services = []
     try:
@@ -142,7 +141,7 @@ async def collect_services() -> List[Dict[str, Any]]:
     return services
 
 
-async def collect_events(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+async def collect_events(config: dict[str, Any]) -> list[dict[str, Any]]:
     """Collect Windows Event Log entries"""
     events = []
     channels = config.get("event_channels", ["System", "Application"])
@@ -209,7 +208,7 @@ async def collect_events(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     return events[:PUSH_BATCH_SIZE]
 
 
-def parse_log_line(line: str, patterns: List[str]) -> Optional[Dict[str, Any]]:
+def parse_log_line(line: str, patterns: list[str]) -> dict[str, Any] | None:
     """Parse a log line using regex patterns"""
     import re
     for pattern in patterns:
@@ -244,7 +243,7 @@ def parse_log_line(line: str, patterns: List[str]) -> Optional[Dict[str, Any]]:
     return None
 
 
-async def collect_logs(config: Dict[str, Any]) -> List[Dict[str, Any]]:
+async def collect_logs(config: dict[str, Any]) -> list[dict[str, Any]]:
     """Collect custom log files (Google CloudSync, etc.)"""
     logs = []
     log_sources = config.get("log_sources", [])
@@ -283,7 +282,7 @@ async def collect_logs(config: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 # ===================== NETWORK =====================
 
-async def push_data(payload: Dict[str, Any]) -> bool:
+async def push_data(payload: dict[str, Any]) -> bool:
     """Push data to NOC backend"""
     url = f"{NOC_URL}/api/agent/push"
     try:
@@ -299,7 +298,7 @@ async def push_data(payload: Dict[str, Any]) -> bool:
         return False
 
 
-async def send_heartbeat(agent_id: str, status: str = "online", config: Dict = None):
+async def send_heartbeat(agent_id: str, status: str = "online", config: dict = None):
     """Send heartbeat to NOC"""
     url = f"{NOC_URL}/api/agent/heartbeat"
     payload = {"agent_id": agent_id, "status": status, "config": config or {}}
@@ -312,7 +311,7 @@ async def send_heartbeat(agent_id: str, status: str = "online", config: Dict = N
 
 # ===================== MAIN LOOP =====================
 
-async def register_agent(agent_id: str, config: Dict[str, Any]) -> bool:
+async def register_agent(agent_id: str, config: dict[str, Any]) -> bool:
     """Register agent with NOC"""
     url = f"{NOC_URL}/api/agent/register"
     payload = {
