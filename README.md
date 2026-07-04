@@ -1,5 +1,7 @@
 # J1 NOC Operations Platform (JNOP)
 
+![License](https://img.shields.io/badge/License-MIT-FFB300) ![Status](https://img.shields.io/badge/Status-Production_Ready-FFB300) ![Language](https://img.shields.io/badge/Language-Python-FFB300) ![Stack](https://img.shields.io/badge/Stack-FastAPI%2FReact%2FVite-FFB300) ![Platform](https://img.shields.io/badge/Platform-Linux-FFB300)
+
 **Version:** v11.0  
 **Status:** Production Ready  
 **Repository:** https://github.com/JorahOne-Services/J1-NOC-Platform
@@ -308,8 +310,12 @@ All screenshots are live captures from the production instance (as of v11.0).
 
 MIT
 
+Copyright (c) 2026 JorahOne, LLC
+
 ---
 
 ## Author
 
 Built by **Jhonattan L. Jimenez**.
+
+*Built by [JorahOne, LLC](https://github.com/JorahOne-Services) — ...*
