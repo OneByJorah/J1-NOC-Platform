@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -8,7 +7,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
 from ...app.database import SessionLocal
-from ...app.models import User, Role
+from ...app.models import User
 from ..config import get_settings
 
 router = APIRouter()
@@ -27,17 +26,17 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
-    role: Optional[str] = None
+    username: str | None = None
+    role: str | None = None
     scopes: list[str] = []
 
 
 class UserOut(BaseModel):
     id: int
-    username: Optional[str]
-    email: Optional[EmailStr]
-    full_name: Optional[str]
-    role: Optional[str]
+    username: str | None
+    email: EmailStr | None
+    full_name: str | None
+    role: str | None
 
     model_config = {"from_attributes": True}
 
@@ -50,7 +49,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
     to_encode.update({"exp": expire})

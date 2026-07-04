@@ -1,6 +1,7 @@
+import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import httpx
+
 from ..config import get_settings
 
 router = APIRouter()
@@ -49,9 +50,9 @@ async def generate_text(request: OllamaGenerateRequest):
                     "prompt": request.prompt,
                     "stream": request.stream,
                     "context": request.context,
-                    "options": request.options
+                    "options": request.options,
                 },
-                timeout=120.0
+                timeout=120.0,
             )
             response.raise_for_status()
             return response.json()
@@ -90,9 +91,9 @@ async def chat_completion(request: dict):
                 json={
                     "model": model,
                     "prompt": prompt,
-                    "stream": request.get("stream", False)
+                    "stream": request.get("stream", False),
                 },
-                timeout=120.0
+                timeout=120.0,
             )
             response.raise_for_status()
             return response.json()

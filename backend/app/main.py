@@ -1,16 +1,26 @@
-from contextlib import asynccontextmanager
 import json
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .config import get_settings
-from .database import engine, Base
 from . import routers as _routers
-from .routers import static_data
-from .routers import health, auth, dashboard, notifications, tools, ai, osticket as helpdesk, wazuh, setup
+from .config import get_settings
+from .database import Base, engine
+from .routers import (
+    ai,
+    auth,
+    dashboard,
+    health,
+    notifications,
+    setup,
+    static_data,
+    tools,
+    wazuh,
+)
+from .routers import osticket as helpdesk
 
 try:  # optional, missing in some environments
     from .routers import admin as _admin

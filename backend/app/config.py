@@ -1,8 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
 import json
 import os
 
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Runtime-cached DB-backed overrides (populated lazily by config loader)
 _db_overrides: dict[str, str] = {}
@@ -76,8 +76,8 @@ def refresh_db_settings():
     global _db_overrides
     try:
         from .database import SessionLocal
-        from .models import EncryptedSetting
         from .encryption import decrypt
+        from .models import EncryptedSetting
 
         db = SessionLocal()
         try:
@@ -101,8 +101,8 @@ def get_settings() -> Settings:
 def get_db_setting(key: str, default: str = "") -> str:
     """Direct DB read for a single setting; used by routers after startup."""
     from .database import SessionLocal
-    from .models import EncryptedSetting
     from .encryption import decrypt
+    from .models import EncryptedSetting
 
     db = SessionLocal()
     try:

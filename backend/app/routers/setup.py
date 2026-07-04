@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr
 
 from ..database import SessionLocal
-from ..models import User, Role
+from ..models import Role, User
 from .auth import get_password_hash
 
 router = APIRouter()

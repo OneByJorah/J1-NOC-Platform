@@ -1,6 +1,7 @@
-from cryptography.fernet import Fernet
-import os
 import base64
+import os
+
+from cryptography.fernet import Fernet
 
 
 def _get_or_create_key() -> bytes:

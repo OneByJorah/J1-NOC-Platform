@@ -1,13 +1,14 @@
+import hashlib
+import json
+import secrets
+import sqlite3
+from datetime import datetime, timedelta
+from typing import Any
+
+import uvicorn
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
-import sqlite3
-import json
-import hashlib
-import secrets
-from datetime import datetime, timedelta
-import uvicorn
 
 DB_PATH = "/srv/jnop/admin-service/admin.sqlite"
 
@@ -82,7 +83,7 @@ def init_db():
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );
-        """
+        """,
     )
     con.commit()
     # seed default admin if empty
@@ -160,12 +161,12 @@ def get_tabs():
                 "icon": r[5],
             }
             for r in rows
-        ]
+        ],
     }
 
 
 @app.post("/api/admin/tabs")
-def create_tab(payload: Dict[str, Any]):
+def create_tab(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute(
@@ -185,7 +186,7 @@ def create_tab(payload: Dict[str, Any]):
 
 
 @app.put("/api/admin/tabs/{tab_id}")
-def update_tab(tab_id: int, payload: Dict[str, Any]):
+def update_tab(tab_id: int, payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     sets = []
@@ -234,12 +235,12 @@ def get_users():
                 "is_locked": bool(r[6]),
             }
             for r in rows
-        ]
+        ],
     }
 
 
 @app.post("/api/admin/users")
-def create_user(payload: Dict[str, Any]):
+def create_user(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     hashed = hashlib.sha256((payload.get("password") or "changeme").encode()).hexdigest()
@@ -261,7 +262,7 @@ def create_user(payload: Dict[str, Any]):
 
 
 @app.put("/api/admin/users/{user_id}")
-def update_user(user_id: int, payload: Dict[str, Any]):
+def update_user(user_id: int, payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     sets = []
@@ -307,12 +308,12 @@ def get_roles():
         "roles": [
             {"id": r[0], "name": r[1], "slug": r[2], "description": r[3], "permissions": json.loads(r[4] or "{}")}
             for r in rows
-        ]
+        ],
     }
 
 
 @app.post("/api/admin/roles")
-def create_role(payload: Dict[str, Any]):
+def create_role(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute(
@@ -330,7 +331,7 @@ def create_role(payload: Dict[str, Any]):
 
 
 @app.put("/api/admin/roles/{role_id}")
-def update_role(role_id: int, payload: Dict[str, Any]):
+def update_role(role_id: int, payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     sets = []
@@ -376,12 +377,12 @@ def get_notifications():
                 "config": json.loads(r[4] or "{}"),
             }
             for r in rows
-        ]
+        ],
     }
 
 
 @app.post("/api/admin/notifications")
-def create_notification(payload: Dict[str, Any]):
+def create_notification(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute(
@@ -416,7 +417,7 @@ def get_integrations():
                 {"name": "PagerDuty", "platform": "pagerduty", "base_url": "", "api_key": "", "is_active": False},
                 {"name": "Slack", "platform": "slack", "base_url": "", "api_key": "", "is_active": False},
                 {"name": "OxiSDK", "platform": "oak", "base_url": "http://localhost:8000", "api_key": "", "is_active": False},
-            ]
+            ],
         }
     return {
         "integrations": [
@@ -430,12 +431,12 @@ def get_integrations():
                 "config": json.loads(r[5] or "{}"),
             }
             for r in rows
-        ]
+        ],
     }
 
 
 @app.post("/api/admin/integrations")
-def create_integration(payload: Dict[str, Any]):
+def create_integration(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute(
@@ -455,7 +456,7 @@ def create_integration(payload: Dict[str, Any]):
 
 
 @app.put("/api/admin/integrations/{integration_id}")
-def update_integration(integration_id: int, payload: Dict[str, Any]):
+def update_integration(integration_id: int, payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     sets = []
@@ -498,13 +499,13 @@ def setup_status():
     con.close()
     # Check if setup is actually complete (value is 'true')
     setup_complete = False
-    if row and row[0] == 'true':
+    if row and row[0] == "true":
         setup_complete = True
     return {"configured": user_count > 0, "setup_complete": setup_complete, "users": user_count}
 
 
 @app.post("/api/admin/setup/complete")
-def setup_complete(payload: Dict[str, Any]):
+def setup_complete(payload: dict[str, Any]):
     """Mark setup as complete after admin changes default password"""
     password = payload.get("password")
     if not password or len(password) < 8:
@@ -522,7 +523,7 @@ def setup_complete(payload: Dict[str, Any]):
 
 
 @app.post("/api/admin/setup/bootstrap")
-def setup_bootstrap(payload: Dict[str, Any]):
+def setup_bootstrap(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     # create admin role
@@ -570,12 +571,12 @@ def get_policy():
             "max_login_attempts": 5,
             "require_2fa": False,
             "default_role": "user",
-        }
+        },
     }
 
 
 @app.put("/api/admin/policy")
-def update_policy(payload: Dict[str, Any]):
+def update_policy(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute(
@@ -603,12 +604,12 @@ def get_tenant():
             "favicon_url": "/favicon.ico",
             "primary_color": "#1a73e8",
             "theme": "light",
-        }
+        },
     }
 
 
 @app.put("/api/admin/tenants/current")
-def update_tenant(payload: Dict[str, Any]):
+def update_tenant(payload: dict[str, Any]):
     con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
     cur.execute(

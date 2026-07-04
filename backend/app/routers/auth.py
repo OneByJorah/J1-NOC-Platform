@@ -1,14 +1,13 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel, EmailStr
 
-from ..database import SessionLocal
-from ..models import User, Role
 from ..config import get_settings
+from ..database import SessionLocal
+from ..models import User
 
 router = APIRouter()
 
@@ -28,17 +27,17 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
-    role: Optional[str] = None
+    username: str | None = None
+    role: str | None = None
     scopes: list[str] = []
 
 
 class UserOut(BaseModel):
     id: int
-    username: Optional[str]
-    email: Optional[EmailStr]
-    full_name: Optional[str]
-    role: Optional[str]
+    username: str | None
+    email: EmailStr | None
+    full_name: str | None
+    role: str | None
 
     model_config = {"from_attributes": True}
 
@@ -47,7 +46,7 @@ def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-def verify_password(plain: str, hashed: Optional[str]) -> bool:
+def verify_password(plain: str, hashed: str | None) -> bool:
     if not hashed:
         return False
     try:
@@ -56,7 +55,7 @@ def verify_password(plain: str, hashed: Optional[str]) -> bool:
         return False
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
     to_encode.update({"exp": expire})

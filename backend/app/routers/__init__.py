@@ -3,7 +3,7 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Dict
 
-ROUTER_MODULES: Dict[str, str] = {
+ROUTER_MODULES: dict[str, str] = {
     "health": "health",
     "auth": "auth",
     "dashboard": "dashboard",
