@@ -8,7 +8,7 @@ description: >-
   PostgreSQL/Redis state, and an observability stack (Prometheus, Loki, Grafana,
   CrowdSec, SNMP exporter).
 owner: OneByJorah
-repository: https://github.com/OneByJorah/J1-NOC-Platform
+repository: https://github.com/OneByJorah/NexusCore
 
 services:
   backend:
@@ -47,7 +47,7 @@ deploy:
   tool: docker-compose
   systemd_unit: j1-noc-platform.service
   live_env: /etc/j1-noc-platform/.env.live
-  canonical_dir: /home/j1admin/J1-NOC-Platform
+  canonical_dir: /home/j1admin/NexusCore
 
 tooling:
   python: "3.12"
