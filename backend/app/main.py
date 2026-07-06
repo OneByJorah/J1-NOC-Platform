@@ -7,7 +7,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from . import routers as _routers
 from .config import get_settings
 from .logging_config import configure_logging
 from .routers import (
@@ -105,12 +104,6 @@ def create_app() -> FastAPI:
     app.include_router(tools.router, prefix="/api")
     app.include_router(ai.router, prefix="/api")
     app.include_router(wazuh.router, prefix="/api")
-
-    if getattr(_routers, "agent", None) is not None:
-        import app.routers.agent as _agent  # type: ignore[import-not-found]
-
-        if hasattr(_agent, "router"):
-            app.include_router(_agent.router, prefix="/api")
 
     app.include_router(helpdesk.router, prefix="/api")
 
