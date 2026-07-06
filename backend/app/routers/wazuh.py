@@ -9,7 +9,8 @@ from fastapi.responses import JSONResponse
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-router = APIRouter()
+from app.config import get_settings
+from fastapi import APIRouter, HTTPException
 
 
 def _wazuh_config():
