@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from app.config import get_settings
+from ..config import get_settings
 
 router = APIRouter()
 
