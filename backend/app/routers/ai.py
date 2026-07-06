@@ -49,7 +49,7 @@ async def generate_text(request: OllamaGenerateRequest):
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{settings.OLLAMA_URL}/api/generate",
+                f"{settings.ollama_host}/api/generate",
                 json={
                     "model": request.model,
                     "prompt": request.prompt,
@@ -74,7 +74,7 @@ async def list_models():
     """List available Ollama models"""
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{settings.OLLAMA_URL}/api/tags")
+            response = await client.get(f"{settings.ollama_host}/api/tags")
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
@@ -100,7 +100,7 @@ async def chat_completion(request: dict):
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{settings.OLLAMA_URL}/api/generate",
+                f"{settings.ollama_host}/api/generate",
                 json={
                     "model": model,
                     "prompt": prompt,
