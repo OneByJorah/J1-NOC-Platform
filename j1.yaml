@@ -1,0 +1,15 @@
+repo: J1-NOC-Platform
+class: Dashboard
+org: OneByJorah
+owner: Jhonattan L. Jimenez
+license: MIT
+production_score: 0
+last_audit: 2026-07-05T00:00:00Z
+last_publish: ""
+standards_version: "2.1"
+dependencies: []
+deploy_target: production
+tailscale_only: false
+public_facing: true
+community_sla_hours: 48
+adoption_tracked: false

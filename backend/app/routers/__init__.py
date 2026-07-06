@@ -12,7 +12,6 @@ ROUTER_MODULES: dict[str, str] = {
     "ai": "ai",
     "admin": "admin",
     "static_data": "static_data",
-    "agent": "agent",
     "helpdesk": "osticket",
 }
 
