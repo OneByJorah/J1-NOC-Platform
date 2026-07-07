@@ -40,8 +40,8 @@ This is a CLI/backend-only tool. No screenshots available.
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/OneByJorah/J1-NOC-Platform.git
-cd J1-NOC-Platform
+git clone https://github.com/OneByJorah/NexusCore.git
+cd NexusCore
 cp .env.example .env
 # Edit .env with your configuration
 docker compose up -d
@@ -103,7 +103,7 @@ docker compose down
 ## 📁 Project Structure
 
 ```
-J1-NOC-Platform/
+NexusCore/
 ├── frontend/              # React + Vite SPA
 ├── backend/               # FastAPI backend server
 ├── admin-service/         # Admin & RBAC service

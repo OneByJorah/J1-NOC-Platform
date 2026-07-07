@@ -6,21 +6,21 @@ After=docker.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/home/<user>/J1-NOC-Platform
-Environment="PROJECT_DIR=/home/<user>/J1-NOC-Platform"
+WorkingDirectory=/home/<user>/NexusCore
+Environment="PROJECT_DIR=/home/<user>/NexusCore"
 Environment="LIVE_ENV=/etc/j1-noc-platform/.env.live"
 
 # Load live secrets into systemd environment
 EnvironmentFile=/etc/j1-noc-platform/.env.live
 
 # On start: copy live env in, bring up compose, then scrub working .env
-ExecStartPre=/bin/bash -c 'cp /etc/j1-noc-platform/.env.live /home/<user>/J1-NOC-Platform/.env'
+ExecStartPre=/bin/bash -c 'cp /etc/j1-noc-platform/.env.live /home/<user>/NexusCore/.env'
 ExecStart=/usr/bin/docker compose up -d --build --remove-orphans
-ExecStartPost=/bin/bash -c 'cp /home/<user>/J1-NOC-Platform/.env.example /home/<user>/J1-NOC-Platform/.env'
+ExecStartPost=/bin/bash -c 'cp /home/<user>/NexusCore/.env.example /home/<user>/NexusCore/.env'
 
 # On stop: stop containers, reset .env to safe template
 ExecStop=/usr/bin/docker compose down
-ExecStopPost=/bin/bash -c 'cp /home/<user>/J1-NOC-Platform/.env.example /home/<user>/J1-NOC-Platform/.env'
+ExecStopPost=/bin/bash -c 'cp /home/<user>/NexusCore/.env.example /home/<user>/NexusCore/.env'
 
 User=root
 Group=root
