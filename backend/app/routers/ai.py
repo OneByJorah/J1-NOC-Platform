@@ -7,12 +7,14 @@ from ..config import get_settings
 router = APIRouter()
 settings = get_settings()
 
+
 class OllamaGenerateRequest(BaseModel):
     prompt: str
     model: str = "gemma:2b"
     stream: bool = False
     context: list[int] | None = None
     options: dict | None = None
+
 
 class OllamaGenerateResponse(BaseModel):
     model: str
@@ -27,6 +29,7 @@ class OllamaGenerateResponse(BaseModel):
     eval_count: int | None = None
     eval_duration: int | None = None
 
+
 class OllamaModelInfo(BaseModel):
     name: str
     model: str
@@ -35,8 +38,10 @@ class OllamaModelInfo(BaseModel):
     digest: str
     details: dict
 
+
 class OllamaModelsResponse(BaseModel):
     models: list[OllamaModelInfo]
+
 
 @router.post("/generate", response_model=OllamaGenerateResponse)
 async def generate_text(request: OllamaGenerateRequest):
@@ -57,9 +62,12 @@ async def generate_text(request: OllamaGenerateRequest):
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=f"Ollama error: {e.response.text}")
+        raise HTTPException(
+            status_code=e.response.status_code, detail=f"Ollama error: {e.response.text}"
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 
 @router.get("/models", response_model=OllamaModelsResponse)
 async def list_models():
@@ -70,9 +78,12 @@ async def list_models():
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=f"Ollama error: {e.response.text}")
+        raise HTTPException(
+            status_code=e.response.status_code, detail=f"Ollama error: {e.response.text}"
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 
 @router.post("/chat")
 async def chat_completion(request: dict):
@@ -83,8 +94,10 @@ async def chat_completion(request: dict):
         messages = request.get("messages", [])
         # For simplicity, we'll just concatenate messages into a prompt
         # In a more advanced implementation, you'd use Ollama's chat API
-        prompt = "\n".join([f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages])
-        
+        prompt = "\n".join(
+            [f"{msg.get('role', 'user')}: {msg.get('content', '')}" for msg in messages]
+        )
+
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f"{settings.OLLAMA_URL}/api/generate",
@@ -98,6 +111,8 @@ async def chat_completion(request: dict):
             response.raise_for_status()
             return response.json()
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=f"Ollama error: {e.response.text}")
+        raise HTTPException(
+            status_code=e.response.status_code, detail=f"Ollama error: {e.response.text}"
+        ) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

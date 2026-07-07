@@ -28,7 +28,7 @@ class OnboardingCreateResponse(BaseModel):
 def setup_status():
     db = SessionLocal()
     try:
-        user_count = db.query(User).filter(User.is_active == True).count()
+        user_count = db.query(User).filter(User.is_active.is_(True)).count()
         return OnboardingStatusResponse(needs_setup=user_count == 0)
     finally:
         db.close()
@@ -39,7 +39,7 @@ def create_first_admin(payload: OnboardingCreateRequest):
     db = SessionLocal()
     try:
         # Guard: only allow setup when no active users exist
-        user_count = db.query(User).filter(User.is_active == True).count()
+        user_count = db.query(User).filter(User.is_active.is_(True)).count()
         if user_count > 0:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -61,7 +61,9 @@ def create_first_admin(payload: OnboardingCreateRequest):
             db.refresh(admin_role)
 
         if db.query(User).filter(User.username == payload.username).first():
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Username already exists"
+            )
 
         user = User(
             username=payload.username,
@@ -74,6 +76,8 @@ def create_first_admin(payload: OnboardingCreateRequest):
         db.add(user)
         db.commit()
 
-        return OnboardingCreateResponse(message="Admin account created. You can now log in.", username=user.username)
+        return OnboardingCreateResponse(
+            message="Admin account created. You can now log in.", username=user.username
+        )
     finally:
         db.close()

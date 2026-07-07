@@ -1,7 +1,59 @@
-repo: J1-NOC-Platform
-class: NOC / Monitoring
-org: OneByJorah
-license: MIT
-production_score: 62
-last_audit: "2026-07-05"
-deploy_target: scratch
+# J1 NOC Platform — project manifest
+# Single source of truth for service identity, ports, and operational metadata.
+name: j1-noc-platform
+display_name: J1 NOC Platform
+version: 11.0.0
+description: >-
+  Full-stack Network Operations Center platform: FastAPI backend, React frontend,
+  PostgreSQL/Redis state, and an observability stack (Prometheus, Loki, Grafana,
+  CrowdSec, SNMP exporter).
+owner: OneByJorah
+repository: https://github.com/OneByJorah/J1-NOC-Platform
+
+services:
+  backend:
+    image: j1-noc-platform-backend
+    port: 8000
+    healthcheck: /health
+  frontend:
+    image: j1-noc-platform-frontend
+    port: 80
+    published: 5173
+  postgres:
+    image: postgres:16.14-alpine
+    port: 5432
+  redis:
+    image: redis:7.4.9-alpine
+    port: 6379
+  nginx:
+    image: nginx:1.30.3-alpine
+    ports: [5173, 8443]
+  grafana:
+    image: grafana/grafana:11.4.0
+    port: 3000
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    port: 9090
+  loki:
+    image: grafana/loki:3.2.0
+    port: 3100
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.7.8
+  snmp-exporter:
+    image: prom/snmp-exporter:v0.30.1
+    port: 9116
+
+deploy:
+  tool: docker-compose
+  systemd_unit: j1-noc-platform.service
+  live_env: /etc/j1-noc-platform/.env.live
+  canonical_dir: /home/<user>/J1-NOC-Platform
+
+tooling:
+  python: "3.12"
+  node: "20"
+  package_manager: uv
+  lint: ruff
+  type_check: mypy
+  test_runner: pytest
+  ci: github-actions

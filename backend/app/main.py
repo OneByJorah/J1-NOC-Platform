@@ -67,7 +67,9 @@ def create_app() -> FastAPI:
             body = json.loads(body_bytes.decode() if body_bytes else "{}")
         except Exception as exc:
             logger.exception("Invalid JSON payload received on /forcerepl", exc_info=exc)
-            return JSONResponse({"Success": False, "Error": "Invalid request payload"}, status_code=200)
+            return JSONResponse(
+                {"Success": False, "Error": "Invalid request payload"}, status_code=200
+            )
         return JSONResponse({"Success": True, "Request": body})
 
     app.include_router(static_data.router, prefix="/api")
@@ -92,10 +94,10 @@ def create_app() -> FastAPI:
     app.include_router(helpdesk.router, prefix="/api")
 
     if _admin is not None:
-        app.include_router(getattr(_admin, "router"), prefix="/api")
+        app.include_router(_admin.router, prefix="/api")
 
     if _settings is not None:
-        app.include_router(getattr(_settings, "router"), prefix="/api")
+        app.include_router(_settings.router, prefix="/api")
 
     return app
 

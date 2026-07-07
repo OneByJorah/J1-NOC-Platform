@@ -80,8 +80,10 @@ class User(Base):
 
 # ===================== WINDOWS AGENT MODELS =====================
 
+
 class WindowsAgent(Base):
     """Registered Windows agent endpoints"""
+
     __tablename__ = "windows_agents"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -109,13 +111,18 @@ class WindowsAgent(Base):
 
 class WindowsService(Base):
     """Windows service status snapshots"""
+
     __tablename__ = "windows_services"
 
     id = Column(Integer, primary_key=True, index=True)
-    agent_id = Column(Integer, ForeignKey("windows_agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    agent_id = Column(
+        Integer, ForeignKey("windows_agents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     service_name = Column(String(255), nullable=False, index=True)
     display_name = Column(String(255))
-    status = Column(String(32), nullable=False)  # running, stopped, paused, start_pending, stop_pending
+    status = Column(
+        String(32), nullable=False
+    )  # running, stopped, paused, start_pending, stop_pending
     start_type = Column(String(32))  # automatic, manual, disabled
     pid = Column(Integer)
     cpu_percent = Column(Integer)  # scaled by 100 (e.g., 1500 = 15.00%)
@@ -133,10 +140,13 @@ class WindowsService(Base):
 
 class WindowsEvent(Base):
     """Windows Event Log entries (System, Application, Security, etc.)"""
+
     __tablename__ = "windows_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    agent_id = Column(Integer, ForeignKey("windows_agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    agent_id = Column(
+        Integer, ForeignKey("windows_agents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     event_id = Column(Integer, nullable=False)  # Windows Event ID
     level = Column(String(16), nullable=False)  # ERROR, WARNING, INFORMATION, CRITICAL
     source = Column(String(255), nullable=False, index=True)  # Event Source/Provider
@@ -160,11 +170,16 @@ class WindowsEvent(Base):
 
 class WindowsLogEntry(Base):
     """Generic log file entries (e.g., Google CloudSync logs, custom app logs)"""
+
     __tablename__ = "windows_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    agent_id = Column(Integer, ForeignKey("windows_agents.id", ondelete="CASCADE"), nullable=False, index=True)
-    log_source = Column(String(128), nullable=False, index=True)  # e.g., "googledrive", "custom_app"
+    agent_id = Column(
+        Integer, ForeignKey("windows_agents.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    log_source = Column(
+        String(128), nullable=False, index=True
+    )  # e.g., "googledrive", "custom_app"
     file_path = Column(String(512))
     level = Column(String(16))  # ERROR, WARNING, INFO, DEBUG
     message = Column(Text, nullable=False)
@@ -181,6 +196,7 @@ class WindowsLogEntry(Base):
 
 
 # ===================== TABS / NAVIGATION =====================
+
 
 class Tab(Base):
     __tablename__ = "tabs"
@@ -207,6 +223,4 @@ class EncryptedSetting(Base):
     description = Column(Text, nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    __table_args__ = (
-        Index("ix_encrypted_settings_category", "category"),
-    )
+    __table_args__ = (Index("ix_encrypted_settings_category", "category"),)

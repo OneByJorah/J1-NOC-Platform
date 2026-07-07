@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -51,7 +51,9 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.access_token_expire_minutes))
+    expire = datetime.now(UTC) + (
+        expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
+    )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
 
@@ -65,11 +67,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
-        token_scopes = payload.get("scopes", [])
         if username is None:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+    except JWTError as err:
+        raise credentials_exception from err
     db = SessionLocal()
     try:
         user = db.query(User).filter(User.username == username).first()
@@ -85,6 +86,7 @@ def require_roles(*roles: str):
         if current_user.role.name not in roles:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient role")
         return current_user
+
     return checker
 
 
@@ -94,7 +96,9 @@ def login(form: OAuth2PasswordRequestForm = Depends()):
     try:
         user = db.query(User).filter(User.username == form.username).first()
         if not user or not verify_password(form.password, user.hashed_password or ""):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
         token = create_access_token({"sub": user.username or "", "scopes": [user.role.name]})
         return Token(access_token=token, token_type="bearer")
     finally:
