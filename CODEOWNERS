@@ -1,0 +1,18 @@
+# Default owners for the J1 NOC Platform
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+*       @OneByJorah
+
+# Backend / infrastructure
+/backend/       @OneByJorah
+/docker-compose.yml    @OneByJorah
+/systemd/       @OneByJorah
+
+# Frontend
+/frontend/      @OneByJorah
+
+# Windows agent
+/agent/         @OneByJorah
+
+# Secrets & CI must be reviewed by an owner
+/.github/       @OneByJorah
+/.env.live      @OneByJorah

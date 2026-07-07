@@ -22,7 +22,13 @@ def _count_tickets() -> int:
     try:
         tickets = _load_json("helpdesk_tickets.json")
         if isinstance(tickets, list):
-            return len([t for t in tickets if t.get("status", "").lower() in ("open", "in progress", "new")])
+            return len(
+                [
+                    t
+                    for t in tickets
+                    if t.get("status", "").lower() in ("open", "in progress", "new")
+                ]
+            )
     except Exception:
         pass
     return 0
@@ -37,12 +43,12 @@ def dashboard_overview():
     # Count devices from DC status
     dcs = dc_status.get("DCs", dc_status.get("dc_status", []))
     total_devices = len(dcs) if isinstance(dcs, list) else 0
-    online_devices = len([d for d in dcs if isinstance(d, dict) and d.get("status", "").lower() == "ok"])
+    online_devices = len(
+        [d for d in dcs if isinstance(d, dict) and d.get("status", "").lower() == "ok"]
+    )
 
     # Count NTP clients and derive alerts
     clients = ntp_status.get("Clients", ntp_status.get("clients", []))
-    total_clients = len(clients) if isinstance(clients, list) else 0
-    online_ntp = len([c for c in clients if isinstance(c, dict) and c.get("status", "").lower() == "ok"])
 
     # Count alerts: NTP warnings + offline DCs
     active_alerts = 0
@@ -58,11 +64,13 @@ def dashboard_overview():
 
     open_tickets = _count_tickets()
 
-    return JSONResponse({
-        "total_devices": total_devices,
-        "online_devices": online_devices,
-        "offline_devices": total_devices - online_devices,
-        "active_alerts": active_alerts,
-        "critical_alerts": critical_alerts,
-        "open_tickets": open_tickets,
-    })
+    return JSONResponse(
+        {
+            "total_devices": total_devices,
+            "online_devices": online_devices,
+            "offline_devices": total_devices - online_devices,
+            "active_alerts": active_alerts,
+            "critical_alerts": critical_alerts,
+            "open_tickets": open_tickets,
+        }
+    )

@@ -14,7 +14,11 @@ def _get_or_create_key() -> bytes:
         return key_env.encode("utf-8")
     # Fallback: derive from SECRET_KEY (not ideal but works for single-node deploys)
     secret = os.getenv("SECRET_KEY", "change-me")
-    raw = secret.encode("utf-8")[:32].ljust(32, b"\0") if isinstance(secret, str) else secret[:32].ljust(32, b"\0")
+    raw = (
+        secret.encode("utf-8")[:32].ljust(32, b"\0")
+        if isinstance(secret, str)
+        else secret[:32].ljust(32, b"\0")
+    )
     return base64.urlsafe_b64encode(raw)
 
 
