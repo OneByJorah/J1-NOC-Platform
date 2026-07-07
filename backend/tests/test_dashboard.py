@@ -5,11 +5,12 @@ os.environ.setdefault("SECRET_KEY", "test-secret")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("BACKEND_CORS_ORIGINS", '["http://localhost","http://127.0.0.1"]')
 
+from fastapi.testclient import TestClient
+
 from backend.app.database import Base, engine
 from backend.app.main import app
 from backend.app.models import Role, User
 from backend.app.routers.auth import get_password_hash
-from fastapi.testclient import TestClient
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,8 +18,10 @@ client = TestClient(app)
 
 
 def seed_admin():
-    from backend.app.database import SessionLocal
     from sqlalchemy.orm import Session
+
+    from backend.app.database import SessionLocal
+
     db: Session = SessionLocal()
     try:
         role = db.query(Role).filter(Role.name == "Super Admin").first()
@@ -28,14 +31,16 @@ def seed_admin():
             db.commit()
             db.refresh(role)
         if db.query(User).filter(User.username == "admin").first() is None:
-            db.add(User(
-                username="admin",
-                email="admin@local",
-                full_name="Admin",
-                hashed_password=get_password_hash("admin"),
-                role_id=role.id,
-                is_active=True,
-            ))
+            db.add(
+                User(
+                    username="admin",
+                    email="admin@local",
+                    full_name="Admin",
+                    hashed_password=get_password_hash("admin"),
+                    role_id=role.id,
+                    is_active=True,
+                )
+            )
             db.commit()
     finally:
         db.close()

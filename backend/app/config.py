@@ -83,8 +83,7 @@ def refresh_db_settings():
         try:
             rows = db.query(EncryptedSetting).all()
             _db_overrides = {
-                row.key: (decrypt(row.value) if row.is_encrypted else row.value)
-                for row in rows
+                row.key: (decrypt(row.value) if row.is_encrypted else row.value) for row in rows
             }
         finally:
             db.close()

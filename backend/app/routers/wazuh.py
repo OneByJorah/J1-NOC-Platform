@@ -12,16 +12,24 @@ from app.config import get_settings
 
 router = APIRouter()
 
+
 def _wazuh_config():
     settings = get_settings()
     return {
-        "url": getattr(settings, "wazuh_api_url", os.getenv("WAZUH_API_URL", "https://localhost:55000")).rstrip("/"),
+        "url": getattr(
+            settings, "wazuh_api_url", os.getenv("WAZUH_API_URL", "https://localhost:55000")
+        ).rstrip("/"),
         "username": getattr(settings, "wazuh_username", os.getenv("WAZUH_USERNAME", "wazuh")),
         "password": getattr(settings, "wazuh_password", os.getenv("WAZUH_PASSWORD", "wazuh")),
-        "verify_ssl": getattr(settings, "wazuh_verify_ssl", os.getenv("WAZUH_VERIFY_SSL", "false")).lower() in ("1", "true", "yes"),
+        "verify_ssl": getattr(
+            settings, "wazuh_verify_ssl", os.getenv("WAZUH_VERIFY_SSL", "false")
+        ).lower()
+        in ("1", "true", "yes"),
     }
 
+
 OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+
 
 def _session(verify: bool = False) -> requests.Session:
     session = requests.Session()
@@ -48,6 +56,7 @@ def get_wazuh_token() -> str | None:
     except Exception:
         return None
 
+
 @router.get("/wazuh/status")
 def get_wazuh_status():
     """Get Wazuh service status"""
@@ -67,7 +76,9 @@ def get_wazuh_status():
 
         if response.status_code == 200:
             return JSONResponse({"status": "Connected", "data": response.json()})
-        return JSONResponse({"status": "Disconnected", "error": f"API returned {response.status_code}"})
+        return JSONResponse(
+            {"status": "Disconnected", "error": f"API returned {response.status_code}"}
+        )
     except Exception as e:
         return JSONResponse({"status": "Disconnected", "error": str(e)})
 
@@ -91,11 +102,13 @@ def get_wazuh_agents():
 
         if response.status_code == 200:
             return JSONResponse(response.json())
-        raise HTTPException(status_code=response.status_code, detail=f"API returned {response.status_code}")
+        raise HTTPException(
+            status_code=response.status_code, detail=f"API returned {response.status_code}"
+        )
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/wazuh/alerts")
@@ -123,11 +136,13 @@ def get_wazuh_alerts(limit: int = 50, offset: int = 0):
 
         if response.status_code == 200:
             return JSONResponse(response.json())
-        raise HTTPException(status_code=response.status_code, detail=f"API returned {response.status_code}")
+        raise HTTPException(
+            status_code=response.status_code, detail=f"API returned {response.status_code}"
+        )
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/wazuh/overview")
@@ -173,7 +188,7 @@ def get_wazuh_overview():
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/ollama/status")
@@ -187,8 +202,12 @@ def get_ollama_status():
                 timeout=10,
             )
         if response.status_code == 200:
-            return JSONResponse({"status": "Connected", "models": response.json().get("models", [])})
-        return JSONResponse({"status": "Disconnected", "error": f"API returned {response.status_code}"})
+            return JSONResponse(
+                {"status": "Connected", "models": response.json().get("models", [])}
+            )
+        return JSONResponse(
+            {"status": "Disconnected", "error": f"API returned {response.status_code}"}
+        )
     except Exception as e:
         return JSONResponse({"status": "Disconnected", "error": str(e)})
 
@@ -217,8 +236,10 @@ def chat_with_ollama(payload: dict[str, Any]):
 
         if response.status_code == 200:
             return JSONResponse(response.json())
-        raise HTTPException(status_code=response.status_code, detail=f"Ollama API returned {response.status_code}")
+        raise HTTPException(
+            status_code=response.status_code, detail=f"Ollama API returned {response.status_code}"
+        )
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

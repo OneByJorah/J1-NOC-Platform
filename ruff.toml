@@ -1,0 +1,14 @@
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "C4", "SIM", "W", "DJ", "ASYNC"]
+ignore = ["E501", "B008", "B905", "C901"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"backend/tests/*" = ["B", "F401"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
