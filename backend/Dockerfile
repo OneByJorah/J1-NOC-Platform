@@ -34,10 +34,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 
 # Create directories and non-root user
-RUN mkdir -p /logs /srv/jnop/data && \
+RUN mkdir -p /logs /srv/jnop/data /srv/jnop/logs && \
     addgroup --system --gid 1001 jnop && \
     adduser --system --uid 1001 --ingroup jnop --no-create-home jnop && \
-    chown -R jnop:jnop /app /logs
+    chown -R jnop:jnop /app /logs /srv/jnop
 
 USER jnop
 
@@ -50,5 +50,3 @@ LABEL org.opencontainers.image.title="J1-NOC-Platform Backend" \
       org.opencontainers.image.description="FastAPI backend for J1 NOC Platform" \
       org.opencontainers.image.vendor="JorahOne" \
       org.opencontainers.image.version="11.0.0"
-
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
