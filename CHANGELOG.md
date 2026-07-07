@@ -15,7 +15,7 @@ All notable changes to this project are documented here, per
 - Branch protection requiring CI checks + 1 review
 
 ### Changed
-- Backend image now runs as non-root `appuser`; SBOM generated in CI
+- Backend image now runs as non-root user; SBOM generated in CI
 - Schema managed exclusively via Alembic (removed `create_all` from lifespan)
 - Repo hygiene: `CODEOWNERS`, `.dockerignore`, `.editorconfig`, `.gitignore` excludes build output
 
