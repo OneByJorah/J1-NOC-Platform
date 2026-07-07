@@ -5,11 +5,11 @@
 # then prints the access URL.
 #
 # Run on a fresh Ubuntu/Debian server as a user with sudo:
-#   curl -fsSL https://raw.githubusercontent.com/JorahOne-Services/J1-NOC-Platform/main/scripts/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/JorahOne-Services/NexusCore/main/scripts/install.sh | bash
 
 set -euo pipefail
 
-REPO_URL="https://github.com/JorahOne-Services/J1-NOC-Platform.git"
+REPO_URL="https://github.com/JorahOne-Services/NexusCore.git"
 INSTALL_DIR="${INSTALL_DIR:-/opt/j1-noc-platform}"
 HTTP_PORT="${HTTP_PORT:-5173}"
 

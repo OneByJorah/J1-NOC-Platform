@@ -4,11 +4,11 @@
 Production secrets are stored in `/etc/j1-noc-platform/.env.live` with mode `600`, owned by root. The repo itself never contains live credentials.
 
 ## How to update the live server
-1. Edit code in `/home/j1admin/J1-NOC-Platform` as normal.
+1. Edit code in `/home/j1admin/NexusCore` as normal.
 2. Commit and push to GitHub.
 3. Run the deploy script as root:
    ```bash
-   sudo /home/j1admin/J1-NOC-Platform/scripts/deploy.sh
+   sudo /home/j1admin/NexusCore/scripts/deploy.sh
    ```
 The script:
 - Pulls latest code
@@ -18,7 +18,7 @@ The script:
 
 ## How to start/stop the live service via systemd
 ```bash
-sudo cp /home/j1admin/J1-NOC-Platform/systemd/j1-noc-platform.service /etc/systemd/system/
+sudo cp /home/j1admin/NexusCore/systemd/j1-noc-platform.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now j1-noc-platform
 ```
@@ -26,8 +26,8 @@ sudo systemctl enable --now j1-noc-platform
 ## Pre-commit hook (secret guard)
 Install once per clone:
 ```bash
-cp /home/j1admin/J1-NOC-Platform/.githooks/pre-commit /home/j1admin/J1-NOC-Platform/.git/hooks/pre-commit
-chmod +x /home/j1admin/J1-NOC-Platform/.git/hooks/pre-commit
+cp /home/j1admin/NexusCore/.githooks/pre-commit /home/j1admin/NexusCore/.git/hooks/pre-commit
+chmod +x /home/j1admin/NexusCore/.git/hooks/pre-commit
 ```
 This blocks commits that look like they contain passwords, API keys, tokens, or private keys.
 

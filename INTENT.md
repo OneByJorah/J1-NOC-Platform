@@ -1,6 +1,6 @@
 # INTENT.md — J1-PIPELINE Phase -1 (ORACLE)
 
-**Repository:** `OneByJorah/J1-NOC-Platform`
+**Repository:** `OneByJorah/NexusCore`
 **Analysis Date:** 2026-07-05
 **Analyst:** J1-PIPELINE ORACLE (read-only)
 **Status:** Intent Reconstructed
@@ -77,7 +77,7 @@ The initial commit ("Add files via upload") was a bulk import of a pre-built cod
 
 ```
 JorahOne / OneByJorah Ecosystem
-├── J1-NOC-Platform          ← Enterprise NOC dashboard (this repo)
+├── NexusCore                ← Enterprise NOC dashboard (this repo)
 ├── J1-Agent (implied)       ← Windows monitoring agent (agent/ subdirectory)
 ├── Hermes Agent             ← AI agent platform (separate repo, referenced in software-development/)
 └── Other J1 repos            ← Supporting infrastructure tools
@@ -109,7 +109,7 @@ Evidence:
 - **Testing**: Minimal — 2 test files (test_auth.py, test_dashboard.py) with basic health/login/dashboard tests; no test runner configured in CI (only `py_compile` check)
 - **Roadmap**: 14-phase plan; phases 1-3 complete, 4-5 in progress, 6-14 planned — significant functionality still under development
 - **Documentation**: Comprehensive README, live deployment guide, deployment plan/report, roadmap, screenshots directory
-- **Naming discrepancy**: README brand is "J1 NOC Operations Platform" / "JNOP"; repo name is "J1-NOC-Platform"; internal Docker volume prefix is `jnop_`
+- **Naming discrepancy**: README brand is "J1 NOC Operations Platform" / "JNOP"; repo name is "NexusCore"; internal Docker volume prefix is `jnop_`
 
 ---
 
@@ -136,7 +136,7 @@ Evidence:
 ## Repository Structure
 
 ```
-J1-NOC-Platform/
+NexusCore/
 ├── docker-compose.yml              # Main deployment — 10 services
 ├── docker-compose.override.yml     # Override: nginx ports + frontend build config
 ├── docker-compose.yml.bak          # Backup of previous compose config
@@ -274,7 +274,7 @@ J1-NOC-Platform/
 
 ## Notes
 
-- **Naming discrepancy**: The README brands the project as "J1 NOC Operations Platform" with abbreviation "JNOP", while the repo is named `J1-NOC-Platform`. Docker volumes use the `jnop_` prefix. This inconsistency should be resolved to a single brand name.
+- **Naming discrepancy**: The README brands the project as "J1 NOC Operations Platform" with abbreviation "JNOP", while the repo is named `NexusCore`. Docker volumes use the `jnop_` prefix. This inconsistency should be resolved to a single brand name.
 - **SECURITY.md is a template**: The file contains placeholder text from GitHub's default security policy template. Version support table and vulnerability reporting instructions are not filled in.
 - **CONTRIBUTING.md is minimal**: Only 1 line ("PRs are welcome. Open an issue first for major changes."). No coding standards, branch strategy, or review process documented.
 - **CHANGELOG.md is minimal**: Only 1 entry dated 2026-06-13. Does not reflect the full commit history or version bumps (v11.0.0).

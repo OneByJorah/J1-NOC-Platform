@@ -4,7 +4,7 @@
 # The repository .env is restored to a safe template after deployment.
 set -euo pipefail
 
-PROJECT_DIR="/home/j1admin/J1-NOC-Platform"
+PROJECT_DIR="/home/j1admin/NexusCore"
 LIVE_ENV="/etc/j1-noc-platform/.env.live"
 EXAMPLE_ENV="$PROJECT_DIR/.env.example"
 
