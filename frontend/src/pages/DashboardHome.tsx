@@ -1,185 +1,48 @@
 import { useEffect, useState } from 'react';
 import { get } from '../services/api';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-} from 'recharts';
-
-type Kpis = {
-  total_devices: number;
-  online_devices: number;
-  offline_devices: number;
-  active_alerts: number;
-  critical_alerts: number;
-  open_tickets: number;
-};
-
-type IntegrationStatus = {
-  name: string;
-  ok: boolean;
-  detail: string;
-  timestamp: string;
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  snmp: 'SNMP / PBX',
-  ldap: 'LDAP Directory',
-  wazuh: 'Wazuh SIEM',
-  osticket: 'osTicket',
-};
-
-type Service = { name: string; status: 'up' | 'down' };
-
-type Overview = {
-  kpis: Kpis;
-  services: Service[];
-  healthy: number;
-  total_services: number;
-};
-
-const COLORS = ['#00ff9d', '#ff3860', '#00f3ff'];
 
 export default function DashboardHome() {
-  const [data, setData] = useState<Overview | null>(null);
-  const [integrations, setIntegrations] = useState<IntegrationStatus[] | null>(null);
+  const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    get('system/overview')
-      .then((d) => {
-        if (!cancelled) setData(d as Overview);
-      })
-      .catch((e) => {
-        if (!cancelled) setError(e.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    get('integrations/status')
-      .then((s) => {
-        if (!cancelled) setIntegrations((s as IntegrationStatus[]) || []);
-      })
-      .catch(() => {
-        if (!cancelled) setIntegrations([]);
-      });
-    return () => {
-      cancelled = true;
-    };
+    get('dashboard/overview')
+      .then((d) => setData(d))
+      .catch((e: Error) => setError(e.message));
   }, []);
 
   if (error) return <div className="error">{error}</div>;
-  if (loading || !data) return <div className="loading">Loading operations overview…</div>;
-
-  const { kpis, services, healthy, total_services } = data;
-  const deviceData = [
-    { name: 'Online', value: kpis.online_devices },
-    { name: 'Offline', value: kpis.offline_devices },
-    { name: 'Alerts', value: kpis.active_alerts },
-  ];
+  if (!data) return <div className="loading">Loading overview…</div>;
 
   return (
     <section className="overview">
-      <header className="overview-head">
-        <h1>Operations Overview</h1>
-        <span className={`ops-badge ${healthy === total_services ? 'ok' : 'warn'}`}>
-          {healthy}/{total_services} services healthy
-        </span>
-      </header>
-
-      <div className="kpi-grid">
-        <Kpi label="Total Devices" value={kpis.total_devices} tone="primary" />
-        <Kpi label="Online Devices" value={kpis.online_devices} tone="ok" />
-        <Kpi label="Offline Devices" value={kpis.offline_devices} tone="err" />
-        <Kpi label="Active Alerts" value={kpis.active_alerts} tone="warn" />
-        <Kpi label="Critical Alerts" value={kpis.critical_alerts} tone="err" />
-        <Kpi label="Open Tickets" value={kpis.open_tickets} tone="primary" />
-      </div>
-
-      <div className="overview-body">
-        <div className="panel">
-          <h2>Device Health</h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie
-                data={deviceData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={50}
-                outerRadius={90}
-                paddingAngle={2}
-              >
-                {deviceData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  background: '#0c0c28',
-                  border: '1px solid rgba(0,243,255,0.18)',
-                  color: '#e0e0ff',
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+      <h1>Overview</h1>
+      <div className="grid">
+        <div className="card">
+          <div className="card-title">Total Devices</div>
+          <div className="card-value">{data.total_devices}</div>
         </div>
-
-        <div className="panel">
-          <h2>Service Status</h2>
-          <ul className="svc-list">
-            {services.map((s) => (
-              <li key={s.name} className="svc-row">
-                <span className="svc-name">{s.name}</span>
-                <span className={`svc-dot ${s.status}`} />
-                <span className={`svc-status ${s.status}`}>{s.status.toUpperCase()}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="card">
+          <div className="card-title">Online Devices</div>
+          <div className="card-value">{data.online_devices}</div>
         </div>
-
-        <div className="panel">
-          <h2>Live Integrations</h2>
-          {!integrations ? (
-            <div className="dim">loading…</div>
-          ) : integrations.length === 0 ? (
-            <div className="dim">no integrations configured</div>
-          ) : (
-            <ul className="svc-list">
-              {integrations.map((it) => (
-                <li key={it.name} className="svc-row">
-                  <span className="svc-name">{STATUS_LABELS[it.name] || it.name}</span>
-                  <span className={`svc-dot ${it.ok ? 'ok' : 'down'}`} />
-                  <span className={`svc-status ${it.ok ? 'up' : 'down'}`}>
-                    {it.ok ? 'LIVE' : 'OFFLINE'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="card">
+          <div className="card-title">Offline Devices</div>
+          <div className="card-value">{data.offline_devices}</div>
+        </div>
+        <div className="card">
+          <div className="card-title">Active Alerts</div>
+          <div className="card-value">{data.active_alerts}</div>
+        </div>
+        <div className="card">
+          <div className="card-title">Critical Alerts</div>
+          <div className="card-value">{data.critical_alerts}</div>
+        </div>
+        <div className="card">
+          <div className="card-title">Open Tickets</div>
+          <div className="card-value">{data.open_tickets}</div>
         </div>
       </div>
     </section>
-  );
-}
-
-function Kpi({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone: 'primary' | 'ok' | 'err' | 'warn';
-}) {
-  return (
-    <div className={`kpi kpi-${tone}`}>
-      <div className="kpi-value">{value}</div>
-      <div className="kpi-label">{label}</div>
-    </div>
   );
 }
