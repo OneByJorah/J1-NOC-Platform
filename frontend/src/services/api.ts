@@ -1,4 +1,8 @@
-const base = import.meta.env.VITE_API_URL || '/api/';
+// Normalize base so it ALWAYS ends with a single slash. Without this, a
+// `VITE_API_URL=/api` build emits `/apisystem/overview` (no separator) which
+// nginx routes to the SPA and the dashboard hangs on "Loading…".
+const rawBase = import.meta.env.VITE_API_URL ?? '/api/';
+const base = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 const statusHTTP204 = 204;
 
 async function request(url: string, init: RequestInit = {}) {
