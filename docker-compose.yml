@@ -22,7 +22,9 @@ services:
     restart: unless-stopped
     volumes:
       - backend_logs:/logs
-      - /srv/jnop/data:/srv/jnop/data:ro
+      # RW so the collector loop can persist integration status JSON.
+      # Contents are operational state only (no secrets ever written here).
+      - /srv/jnop/data:/srv/jnop/data:rw
     networks:
       - internal
     environment:
@@ -36,6 +38,16 @@ services:
       - MITEL_SNMP_COMMUNITY=${MITEL_SNMP_COMMUNITY}
       - OSTICKET_BASE_URL=${OSTICKET_BASE_URL}
       - OSTICKET_API_KEY=${OSTICKET_API_KEY}
+      # Integration credentials are read from the encrypted DB vault at runtime.
+      # Env pass-through is optional; values here are never the source of truth.
+      - LDAP_URL=${LDAP_URL:-}
+      - LDAP_DOMAIN=${LDAP_DOMAIN:-}
+      - LDAP_BIND_DN=${LDAP_BIND_DN:-}
+      - LDAP_BIND_PASSWORD=${LDAP_BIND_PASSWORD:-}
+      - WAZUH_API_URL=${WAZUH_API_URL:-}
+      - WAZUH_USERNAME=${WAZUH_USERNAME:-}
+      - WAZUH_PASSWORD=${WAZUH_PASSWORD:-}
+      - WAZUH_VERIFY_SSL=${WAZUH_VERIFY_SSL:-false}
     depends_on:
       postgres:
         condition: service_healthy

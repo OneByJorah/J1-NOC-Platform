@@ -17,6 +17,20 @@ type Kpis = {
   open_tickets: number;
 };
 
+type IntegrationStatus = {
+  name: string;
+  ok: boolean;
+  detail: string;
+  timestamp: string;
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  snmp: 'SNMP / PBX',
+  ldap: 'LDAP Directory',
+  wazuh: 'Wazuh SIEM',
+  osticket: 'osTicket',
+};
+
 type Service = { name: string; status: 'up' | 'down' };
 
 type Overview = {
@@ -30,6 +44,7 @@ const COLORS = ['#00ff9d', '#ff3860', '#00f3ff'];
 
 export default function DashboardHome() {
   const [data, setData] = useState<Overview | null>(null);
+  const [integrations, setIntegrations] = useState<IntegrationStatus[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +60,13 @@ export default function DashboardHome() {
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
+      });
+    get('integrations/status')
+      .then((s) => {
+        if (!cancelled) setIntegrations((s as IntegrationStatus[]) || []);
+      })
+      .catch(() => {
+        if (!cancelled) setIntegrations([]);
       });
     return () => {
       cancelled = true;
@@ -118,6 +140,27 @@ export default function DashboardHome() {
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="panel">
+          <h2>Live Integrations</h2>
+          {!integrations ? (
+            <div className="dim">loading…</div>
+          ) : integrations.length === 0 ? (
+            <div className="dim">no integrations configured</div>
+          ) : (
+            <ul className="svc-list">
+              {integrations.map((it) => (
+                <li key={it.name} className="svc-row">
+                  <span className="svc-name">{STATUS_LABELS[it.name] || it.name}</span>
+                  <span className={`svc-dot ${it.ok ? 'ok' : 'down'}`} />
+                  <span className={`svc-status ${it.ok ? 'up' : 'down'}`}>
+                    {it.ok ? 'LIVE' : 'OFFLINE'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </section>
