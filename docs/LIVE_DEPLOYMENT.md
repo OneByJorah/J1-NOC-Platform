@@ -1,40 +1,62 @@
-# J1 NOC Platform — Live Deployment Guide
+# NexusCore — Live Deployment Guide
 
 ## Where live secrets live
-Production secrets are stored in `/etc/j1-noc-platform/.env.live` with mode `600`, owned by root. The repo itself never contains live credentials.
+
+Production secrets are stored in `/etc/nexuscore/.env.live` with mode `600`, owned by root. The repo itself never contains live credentials.
 
 ## How to update the live server
-1. Edit code in `/home/j1admin/NexusCore` as normal.
+
+1. Edit code in the project directory (default `/opt/nexuscore`) as the deploy user.
 2. Commit and push to GitHub.
 3. Run the deploy script as root:
+
    ```bash
-   sudo /home/j1admin/NexusCore/scripts/deploy.sh
+   sudo /opt/nexuscore/scripts/deploy.sh
    ```
+
 The script:
-- Pulls latest code
-- Copies `/etc/j1-noc-platform/.env.live` into the project
-- Runs `docker compose up -d --build --remove-orphans`
-- Resets the repo `.env` to `.env.example` so no secrets remain in the working tree
+
+- Pulls latest code as the configured deploy user.
+- Copies `/etc/nexuscore/.env.live` into the project.
+- Runs `docker compose up -d --build --remove-orphans`.
+- Resets the repo `.env` to `.env.example` so no secrets remain in the working tree.
 
 ## How to start/stop the live service via systemd
+
 ```bash
-sudo cp /home/j1admin/NexusCore/systemd/j1-noc-platform.service /etc/systemd/system/
+sudo cp /opt/nexuscore/systemd/j1-noc-platform.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now j1-noc-platform
 ```
 
 ## Pre-commit hook (secret guard)
+
 Install once per clone:
+
 ```bash
-cp /home/j1admin/NexusCore/.githooks/pre-commit /home/j1admin/NexusCore/.git/hooks/pre-commit
-chmod +x /home/j1admin/NexusCore/.git/hooks/pre-commit
+cp /opt/nexuscore/.githooks/pre-commit /opt/nexuscore/.git/hooks/pre-commit
+chmod +x /opt/nexuscore/.git/hooks/pre-commit
 ```
+
 This blocks commits that look like they contain passwords, API keys, tokens, or private keys.
 
 ## Updating live secrets
-Edit `/etc/j1-noc-platform/.env.live` directly on the server. Then re-run the deploy script.
+
+Edit `/etc/nexuscore/.env.live` directly on the server. Then re-run the deploy script.
+
+## Environment variables
+
+The following environment variables control the deployment behavior:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PROJECT_DIR` | `/opt/nexuscore` | Project installation directory |
+| `LIVE_ENV` | `/etc/nexuscore/.env.live` | Path to the live secrets file |
+| `DEPLOY_USER` | `appuser` | User that pulls code from Git |
+| `NOC_URL` | `http://127.0.0.1:8000` | NOC backend URL used by agents and scripts |
 
 ## Important rules
+
 - Never commit `.env`, `.env.live`, `*.pem`, `*.key`, or `*.crt`.
 - The repo `.env` should always match `.env.example` (template values only).
-- All real credentials must live in `/etc/j1-noc-platform/.env.live`.
+- All real credentials must live in `/etc/nexuscore/.env.live`.

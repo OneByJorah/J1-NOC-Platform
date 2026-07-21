@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# J1 NOC Platform deploy script for live/production server
-# Live secrets are loaded from /etc/j1-noc-platform/.env.live (mode 600)
+# NexusCore deploy script for live/production server
+# Live secrets are loaded from /etc/nexuscore/.env.live (mode 600)
 # The repository .env is restored to a safe template after deployment.
 set -euo pipefail
 
-PROJECT_DIR="/home/j1admin/NexusCore"
-LIVE_ENV="/etc/j1-noc-platform/.env.live"
+PROJECT_DIR="${PROJECT_DIR:-/opt/nexuscore}"
+LIVE_ENV="${LIVE_ENV:-/etc/nexuscore/.env.live}"
 EXAMPLE_ENV="$PROJECT_DIR/.env.example"
+DEPLOY_USER="${DEPLOY_USER:-appuser}"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
@@ -23,7 +24,7 @@ fi
 cd "$PROJECT_DIR"
 
 log "Pulling latest code..."
-sudo -u j1admin git pull origin main
+sudo -u "$DEPLOY_USER" git pull origin main
 
 log "Loading live environment..."
 cp "$LIVE_ENV" "$PROJECT_DIR/.env"
@@ -37,8 +38,8 @@ docker compose exec -T backend alembic upgrade head || log "WARNING: alembic upg
 
 log "Waiting for backend health..."
 sleep 20
-if ! docker ps | grep -q "j1-noc-platform-backend-1.*healthy"; then
-  log "WARNING: backend not healthy yet — check docker logs j1-noc-platform-backend-1"
+if ! docker ps | grep -q "nexuscore-backend-1.*healthy"; then
+  log "WARNING: backend not healthy yet — check docker logs nexuscore-backend-1"
 fi
 
 log "Resetting repo .env to safe template..."

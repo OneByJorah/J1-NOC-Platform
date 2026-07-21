@@ -4,7 +4,7 @@ import subprocess
 import sys
 import time
 
-REPO_DIR = "/home/j1admin/jnop"
+REPO_DIR = os.environ.get("REPO_DIR", "/opt/nexuscore")
 NGINX_CONF = "/etc/nginx/sites-enabled/jnop-dashboard.conf"
 
 def run(*cmd, **kwargs):

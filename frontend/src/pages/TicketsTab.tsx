@@ -11,12 +11,12 @@ export default function TicketsTab() {
       setTickets(Array.isArray(data) ? data : []);
     } catch {
       setTickets([
-        { id: '14554', name: 'John Smith', status: 'In Progress', priority: 'Low', subject: 'Firewall rule change', created: new Date(Date.now() - 2 * 3600000).toISOString(), email: 'noc@vide.vi', dept: 'IT' },
-        { id: '15953', name: 'Bob Johnson', status: 'In Progress', priority: 'Medium', subject: 'Mitel extension not working', created: new Date(Date.now() - 6 * 3600000).toISOString(), email: 'user2@vide.vi', dept: 'IT' },
-        { id: '9772', name: 'Bob Johnson', status: 'Open', priority: 'High', subject: 'Ticket escalation #4521', created: new Date(Date.now() - 12 * 3600000).toISOString(), email: 'user1@vide.vi', dept: 'IT' },
-        { id: '16953', name: 'John Smith', status: 'In Progress', priority: 'Critical', subject: 'Network switch port down (Meraki)', created: new Date(Date.now() - 18 * 3600000).toISOString(), email: 'user2@vide.vi', dept: 'IT' },
-        { id: '10087', name: 'Charlie Davis', status: 'Closed', priority: 'Medium', subject: 'VPN disconnect', created: new Date(Date.now() - 48 * 3600000).toISOString(), email: 'noc@vide.vi', dept: 'IT' },
-        { id: '9624', name: 'Eve Wilson', status: 'In Progress', priority: 'Critical', subject: 'SERVER-PATCH-MEM-02 alert', created: new Date(Date.now() - 53 * 3600000).toISOString(), email: 'noc@vide.vi', dept: 'IT' },
+        { id: '14554', name: 'John Smith', status: 'In Progress', priority: 'Low', subject: 'Firewall rule change', created: new Date(Date.now() - 2 * 3600000).toISOString(), email: 'noc@example.local', dept: 'IT' },
+        { id: '15953', name: 'Bob Johnson', status: 'In Progress', priority: 'Medium', subject: 'Mitel extension not working', created: new Date(Date.now() - 6 * 3600000).toISOString(), email: 'user2@example.local', dept: 'IT' },
+        { id: '9772', name: 'Bob Johnson', status: 'Open', priority: 'High', subject: 'Ticket escalation #4521', created: new Date(Date.now() - 12 * 3600000).toISOString(), email: 'user1@example.local', dept: 'IT' },
+        { id: '16953', name: 'John Smith', status: 'In Progress', priority: 'Critical', subject: 'Network switch port down (Meraki)', created: new Date(Date.now() - 18 * 3600000).toISOString(), email: 'user2@example.local', dept: 'IT' },
+        { id: '10087', name: 'Charlie Davis', status: 'Closed', priority: 'Medium', subject: 'VPN disconnect', created: new Date(Date.now() - 48 * 3600000).toISOString(), email: 'noc@example.local', dept: 'IT' },
+        { id: '9624', name: 'Eve Wilson', status: 'In Progress', priority: 'Critical', subject: 'SERVER-PATCH-MEM-02 alert', created: new Date(Date.now() - 53 * 3600000).toISOString(), email: 'noc@example.local', dept: 'IT' },
       ]);
     }
   };
