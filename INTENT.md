@@ -282,7 +282,7 @@ NexusCore/
 - **SQLite dev artifact committed**: `backend/noc_local.db` is in the working tree — a local SQLite database that should be in `.gitignore`.
 - **docker-compose.yml.bak committed**: A backup of a previous compose file is in the repo root.
 - **Security audit history**: Git history shows multiple security fixes: redacted Tailscale IPs and demo emails, DOM text reinterpretation fixes (CodeQL alerts #3, #4), information exposure fix (CodeQL alert #5). This indicates active security maintenance.
-- **Windows Agent default NOC URL**: The agent defaults to `http://100.72.207.60` — a Tailscale IP that was later redacted from the README but remains in the agent source code.
+- **Windows Agent default NOC URL**: The agent now defaults to `http://127.0.0.1:8000` and can be overridden via the `NOC_URL` environment variable. The previous hardcoded Tailscale IP was removed from the agent source code.
 - **Hermes Agent skill in repo**: The `software-development/hermes-agent-skill-authoring/` directory contains a Hermes Agent skill definition, which is unrelated to the NOC platform's core purpose. This may have been placed here for convenience or as a development artifact.
 - **No explicit backup strategy**: While Docker volumes are named and persistent, there is no documented backup/restore procedure for the PostgreSQL database or other persistent data.
 - **Prometheus scrape config is minimal**: Only scrapes itself. No scrape targets for the backend, Windows agents, or other services are configured — this would need to be extended for production use.
