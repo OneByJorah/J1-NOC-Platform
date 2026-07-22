@@ -1,21 +1,36 @@
 # Security Policy
 
-## Supported Versions
-
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
-
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you discover a security vulnerability, please report it responsibly:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+**DO NOT** open a public GitHub issue for security vulnerabilities.
+
+Instead, please email: **info@jorahone.com**
+
+Include:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Suggested fix (if any)
+
+## Response Timeline
+
+- **Acknowledgment**: Within 48 hours
+- **Initial assessment**: Within 1 week
+- **Fix timeline**: Depends on severity
+
+## Supported Versions
+
+| Version | Supported |
+|---------|-----------|
+| Latest  | ✅ Yes    |
+| Older   | ❌ No     |
+
+## Security Best Practices
+
+When deploying our projects:
+- Use environment variables for secrets
+- Enable HTTPS in production
+- Keep dependencies updated
+- Follow principle of least privilege
